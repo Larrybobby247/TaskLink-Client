@@ -23,15 +23,14 @@ export default function OrderDetailPage() {
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewError, setReviewError] = useState('');
-  
 
   const load = () =>
     ordersApi.get(id).then((res) => setOrder(res.data.order));
 
   useEffect(() => {
-  load();
-}, [id]);
-  
+    load();
+  }, [id]);
+
   if (!order) {
     return (
       <div className="flex justify-center py-16">
@@ -39,22 +38,23 @@ export default function OrderDetailPage() {
       </div>
     );
   }
-const getUserId = (value) => {
-  if (!value) return null;
 
-  if (typeof value === 'object') {
-    return String(value._id || value.id || '');
-  }
+  const getUserId = (value) => {
+    if (!value) return null;
 
-  return String(value);
-};
+    if (typeof value === 'object') {
+      return String(value._id || value.id || '');
+    }
 
-const currentUserId = getUserId(user);
-const clientId = getUserId(order.client);
-const workerId = getUserId(order.worker);
+    return String(value);
+  };
 
-const isClient = currentUserId === clientId;
-const isWorker = currentUserId === workerId;
+  const currentUserId = getUserId(user);
+  const clientId = getUserId(order.client);
+  const workerId = getUserId(order.worker);
+
+  const isClient = currentUserId === clientId;
+  const isWorker = currentUserId === workerId;
 
   const pay = async () => {
     setBusy(true);
@@ -144,7 +144,6 @@ const isWorker = currentUserId === workerId;
 
   return (
     <div className="space-y-5 pb-10">
-
       {/* Order summary */}
       <div className="card p-5">
         <div className="flex items-start justify-between gap-3">
@@ -254,126 +253,118 @@ const isWorker = currentUserId === workerId;
 
       {/* Completed */}
       {order.status === 'COMPLETED' && (
-  <>
-    <div className="card p-5 bg-green-50 border-green-100 text-center">
-      <p className="font-semibold text-green-700">
-        Task completed 🎉
-      </p>
-    </div>
+        <>
+          <div className="card p-5 bg-green-50 border-green-100 text-center">
+            <p className="font-semibold text-green-700">Task completed 🎉</p>
+          </div>
 
-    {isClient && !reviewSubmitted && (
-      <div className="card p-5">
-        <div className="mb-5">
-          <h3 className="font-semibold text-brand-navy text-lg">
-            Rate your experience
-          </h3>
+          {isClient && !reviewSubmitted && (
+            <div className="card p-5">
+              <div className="mb-5">
+                <h3 className="font-semibold text-brand-navy text-lg">
+                  Rate your experience
+                </h3>
 
-          <p className="text-sm text-gray-500 mt-1">
-            How was your experience working with this worker?
-          </p>
-        </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  How was your experience working with this worker?
+                </p>
+              </div>
 
-        <form onSubmit={submitReview} className="space-y-5">
-          {/* Stars */}
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
-              Your rating
-            </p>
+              <form onSubmit={submitReview} className="space-y-5">
+                {/* Stars */}
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Your rating
+                  </p>
 
-            <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  className="p-1 transition-transform hover:scale-110"
-                  aria-label={`Rate ${star} out of 5`}
-                >
-                  <Star
-                    size={30}
-                    strokeWidth={1.8}
-                    className={
-                      star <= rating
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
-                    }
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        className="p-1 transition-transform hover:scale-110"
+                        aria-label={`Rate ${star} out of 5`}
+                      >
+                        <Star
+                          size={30}
+                          strokeWidth={1.8}
+                          className={
+                            star <= rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {rating > 0 && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      {rating === 1 && 'Poor'}
+                      {rating === 2 && 'Fair'}
+                      {rating === 3 && 'Good'}
+                      {rating === 4 && 'Very good'}
+                      {rating === 5 && 'Excellent'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Review */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-2">
+                    Your review
+                  </label>
+
+                  <textarea
+                    className="input-field min-h-[110px]"
+                    placeholder="Share your experience with this worker..."
+                    value={reviewMessage}
+                    onChange={(e) => setReviewMessage(e.target.value)}
+                    maxLength={1000}
                   />
+
+                  <p className="text-xs text-gray-400 mt-1 text-right">
+                    {reviewMessage.length}/1000
+                  </p>
+                </div>
+
+                {reviewError && (
+                  <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">
+                    {reviewError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={reviewBusy || !rating || !reviewMessage.trim()}
+                  className="btn-primary w-full"
+                >
+                  {reviewBusy ? 'Submitting Review...' : 'Submit Review'}
                 </button>
-              ))}
+              </form>
             </div>
-
-            {rating > 0 && (
-              <p className="text-xs text-gray-400 mt-2">
-                {rating === 1 && 'Poor'}
-                {rating === 2 && 'Fair'}
-                {rating === 3 && 'Good'}
-                {rating === 4 && 'Very good'}
-                {rating === 5 && 'Excellent'}
-              </p>
-            )}
-          </div>
-
-          {/* Review */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Your review
-            </label>
-
-            <textarea
-              className="input-field min-h-[110px]"
-              placeholder="Share your experience with this worker..."
-              value={reviewMessage}
-              onChange={(e) => setReviewMessage(e.target.value)}
-              maxLength={1000}
-            />
-
-            <p className="text-xs text-gray-400 mt-1 text-right">
-              {reviewMessage.length}/1000
-            </p>
-          </div>
-
-          {reviewError && (
-            <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">
-              {reviewError}
-            </p>
           )}
 
-          <button
-            type="submit"
-            disabled={
-              reviewBusy ||
-              !rating ||
-              !reviewMessage.trim()
-            }
-            className="btn-primary w-full"
-          >
-            {reviewBusy
-              ? 'Submitting Review...'
-              : 'Submit Review'}
-          </button>
-        </form>
-      </div>
-    )}
+          {isClient && reviewSubmitted && (
+            <div className="card p-5 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+                  <Star size={24} className="fill-yellow-400 text-yellow-400" />
+                </div>
+              </div>
 
-    {isClient && reviewSubmitted && (
-      <div className="card p-5 text-center">
-        <div className="flex justify-center mb-3">
-          <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-            <Star
-              size={24}
-              className="fill-yellow-400 text-yellow-400"
-            />
-          </div>
-        </div>
+              <h3 className="font-semibold text-brand-navy">
+                Thanks for your review!
+              </h3>
 
-        <h3 className="font-semibold text-brand-navy">
-          Thanks for your review!
-        </h3>
-
-        <p className="text-sm text-gray-500 mt-1">
-          Your feedback has been submitted successfully.
-        </p>
-      </div>
-    )}
-  </>
-)}
+              <p className="text-sm text-gray-500 mt-1">
+                Your feedback has been submitted successfully.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
