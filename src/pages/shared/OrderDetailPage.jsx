@@ -24,12 +24,41 @@ export default function OrderDetailPage() {
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewError, setReviewError] = useState('');
 
-  const load = () =>
-    ordersApi.get(id).then((res) => setOrder(res.data.order));
+  const load = async () => {
+    const { data } = await ordersApi.get(id);
+    const nextOrder = data.order;
+
+    setOrder(nextOrder);
+
+    if (nextOrder?.status === 'COMPLETED' && user) {
+      const currentUserId = String(user._id || user.id || '');
+      const clientId = String(nextOrder.client?._id || nextOrder.client || '');
+
+      if (currentUserId === clientId) {
+        try {
+          const reviewRes = await reviewsApi.getOrderReview(nextOrder._id);
+          setReviewSubmitted(Boolean(reviewRes?.data?.review));
+        } catch (err) {
+          if (err?.response?.status === 404) {
+            setReviewSubmitted(false);
+          } else {
+            console.error('Failed to load existing review:', err);
+            setReviewSubmitted(false);
+          }
+        }
+      } else {
+        setReviewSubmitted(false);
+      }
+    } else {
+      setReviewSubmitted(false);
+    }
+  };
 
   useEffect(() => {
-    load();
-  }, [id]);
+    if (id) {
+      load();
+    }
+  }, [id, user]);
 
   if (!order) {
     return (
@@ -131,7 +160,16 @@ export default function OrderDetailPage() {
 
       setReviewSubmitted(true);
       setReviewMessage('');
+      setReviewError('');
     } catch (err) {
+      const status = err?.response?.status;
+
+      if (status === 409) {
+        setReviewSubmitted(true);
+        setReviewError('');
+        return;
+      }
+
       setReviewError(
         err?.response?.data?.message ||
           err?.message ||
