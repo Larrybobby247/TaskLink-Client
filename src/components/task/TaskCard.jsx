@@ -8,23 +8,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 export default function TaskCard({ task }) {
   const { user } = useAuth();
 
-  // Get the logged-in user's ID
-  const userId = user?._id || user?.id;
-
-  // Get the task owner's ID
-  const taskOwnerId =
-    task?.client?._id ||
-    task?.client?.id ||
-    task?.clientId ||
-    task?.createdBy?._id ||
-    task?.createdBy?.id ||
-    task?.createdBy;
-
-  // Convert both to strings before comparing
+  // Check if the logged-in user is the person who posted this task
   const isOwner =
-    userId &&
-    taskOwnerId &&
-    String(userId) === String(taskOwnerId);
+    user?._id &&
+    task?.client?._id &&
+    String(task.client._id) === String(user._id);
 
   return (
     <Link
@@ -47,11 +35,13 @@ export default function TaskCard({ task }) {
 
       {/* Task Information */}
       <div className="flex-1 min-w-0">
+
         <p className="font-semibold text-brand-navy truncate">
           {task.title}
         </p>
 
         <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+
           <span className="flex items-center gap-1">
             <MapPin size={12} />
             {task.isRemote ? 'Online' : task.location}
@@ -61,6 +51,7 @@ export default function TaskCard({ task }) {
             <Clock size={12} />
             {timeUntil(task.deadline)}
           </span>
+
         </div>
 
         {task.category?.name && (
@@ -68,10 +59,12 @@ export default function TaskCard({ task }) {
             {task.category.name}
           </span>
         )}
+
       </div>
 
       {/* Budget + Action */}
       <div className="text-right shrink-0">
+
         <p className="font-bold text-green-600">
           {formatNaira(task.budgetKobo)}
         </p>
@@ -85,6 +78,7 @@ export default function TaskCard({ task }) {
             Apply
           </span>
         )}
+
       </div>
     </Link>
   );
