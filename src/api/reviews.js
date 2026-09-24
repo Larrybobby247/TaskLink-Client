@@ -1,4 +1,4 @@
-import api from './client.js';
+import {api} from './client.js';
 
 export const reviewsApi = {
   create: (data) => api.post('/reviews', data),
