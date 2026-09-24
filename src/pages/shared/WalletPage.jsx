@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { walletApi, withdrawalsApi } from '../../api/orders.js';
 import { formatNaira, nairaToKobo } from '../../utils/money.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
@@ -9,14 +10,28 @@ const TYPE_LABELS = {
   REFUND: 'Refund', ADJUSTMENT: 'Adjustment', BONUS: 'Bonus', SUBSCRIPTION_PAYMENT: 'Subscription',
 };
 
+const emptyBankForm = { bankName: '', accountNumber: '', accountName: '' };
+
 export default function WalletPage() {
+  const { user, updateLocalUser } = useAuth();
   const [balanceKobo, setBalanceKobo] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState('ALL');
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
+  const [bankForm, setBankForm] = useState(emptyBankForm);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  const savedBankDetails = user?.bankDetails;
+
+  useEffect(() => {
+    setBankForm({
+      bankName: savedBankDetails?.bankName || '',
+      accountNumber: savedBankDetails?.accountNumber || '',
+      accountName: savedBankDetails?.accountName || '',
+    });
+  }, [savedBankDetails?.bankName, savedBankDetails?.accountNumber, savedBankDetails?.accountName]);
 
   const load = () => {
     walletApi.get().then((res) => setBalanceKobo(res.data.balanceKobo));
@@ -24,16 +39,37 @@ export default function WalletPage() {
   };
   useEffect(() => { load(); }, [filter]); // eslint-disable-line
 
-  const requestWithdrawal = async () => {
+  const setBankField = (field, value) => {
+    setBankForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const requestWithdrawal = async (event) => {
+    event.preventDefault();
     setError('');
+
+    if (!bankForm.bankName.trim() || !/^\d{10}$/.test(bankForm.accountNumber) || !bankForm.accountName.trim()) {
+      setError('Enter a bank name, a valid 10-digit account number, and the account name.');
+      return;
+    }
+
     setBusy(true);
     try {
+      // Save/update the destination account before creating the withdrawal.
+      const bankResponse = await withdrawalsApi.addBankAccount({
+        bankName: bankForm.bankName.trim(),
+        accountNumber: bankForm.accountNumber,
+        accountName: bankForm.accountName.trim(),
+      });
+      const savedUser = bankResponse.data?.user;
+      const savedDetails = bankResponse.data?.bankDetails || savedUser?.bankDetails || bankForm;
+      updateLocalUser(savedUser || { bankDetails: savedDetails });
+
       await withdrawalsApi.request(nairaToKobo(amount));
       setShowWithdraw(false);
       setAmount('');
       load();
     } catch (err) {
-      setError(err.message);
+      setError(err.errors?.[0]?.message || err.message || 'Unable to process withdrawal.');
     } finally {
       setBusy(false);
     }
@@ -48,8 +84,26 @@ export default function WalletPage() {
       <div className="bg-brand-navy text-white rounded-2xl p-6">
         <p className="text-xs text-white/70">Available balance</p>
         <p className="text-3xl font-bold mt-1">{formatNaira(balanceKobo)}</p>
-        <button onClick={() => setShowWithdraw(true)} className="bg-white text-brand-navy font-semibold rounded-xl px-5 py-2.5 mt-4 text-sm">
+        <button onClick={() => { setError(''); setShowWithdraw(true); }} className="bg-white text-brand-navy font-semibold rounded-xl px-5 py-2.5 mt-4 text-sm">
           Withdraw
+        </button>
+      </div>
+
+      <div className="card p-5 space-y-3">
+        <div>
+          <h2 className="font-semibold text-brand-navy">Withdrawal account</h2>
+          <p className="text-sm text-gray-500 mt-1">Save the bank account where your TaskLink earnings should be sent.</p>
+        </div>
+        {savedBankDetails?.accountNumber ? (
+          <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-sm text-green-800">
+            <p className="font-medium">{savedBankDetails.bankName}</p>
+            <p>{savedBankDetails.accountName} · ****{savedBankDetails.accountNumber.slice(-4)}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-amber-700 bg-amber-50 rounded-lg p-3">Add your bank details before requesting a withdrawal.</p>
+        )}
+        <button type="button" onClick={() => { setError(''); setShowWithdraw(true); }} className="btn-secondary w-full">
+          {savedBankDetails?.accountNumber ? 'Edit bank account' : 'Add bank account'}
         </button>
       </div>
 
@@ -81,15 +135,19 @@ export default function WalletPage() {
 
       {showWithdraw && (
         <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50">
-          <div className="bg-white rounded-t-2xl md:rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="font-bold text-brand-navy mb-3">Withdraw funds</h3>
-            {error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3 mb-3">{error}</div>}
-            <input className="input-field" type="number" placeholder="Amount (₦)" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <div className="flex gap-3 mt-4">
-              <button onClick={() => setShowWithdraw(false)} className="btn-secondary flex-1">Cancel</button>
-              <button onClick={requestWithdrawal} disabled={busy || !amount} className="btn-primary flex-1">{busy ? 'Processing...' : 'Withdraw'}</button>
+          <form onSubmit={requestWithdrawal} className="bg-white rounded-t-2xl md:rounded-2xl p-6 w-full max-w-sm space-y-3">
+            <h3 className="font-bold text-brand-navy">Withdraw funds</h3>
+            <p className="text-xs text-gray-500">Confirm your bank account and enter the amount to withdraw.</p>
+            {error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>}
+            <input className="input-field" placeholder="Bank name" value={bankForm.bankName} onChange={(e) => setBankField('bankName', e.target.value)} required />
+            <input className="input-field" inputMode="numeric" maxLength={10} placeholder="10-digit account number" value={bankForm.accountNumber} onChange={(e) => setBankField('accountNumber', e.target.value.replace(/\D/g, ''))} required />
+            <input className="input-field" placeholder="Account name" value={bankForm.accountName} onChange={(e) => setBankField('accountName', e.target.value)} required />
+            <input className="input-field" type="number" min="1" placeholder="Amount (₦)" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={() => setShowWithdraw(false)} className="btn-secondary flex-1">Cancel</button>
+              <button type="submit" disabled={busy || !amount} className="btn-primary flex-1">{busy ? 'Processing...' : 'Withdraw'}</button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>
