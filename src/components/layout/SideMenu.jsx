@@ -101,6 +101,7 @@ export default function SideMenu({ open, onClose }) {
           flex
           flex-col
           overflow-hidden
+          pb-20
         "
       >
 
