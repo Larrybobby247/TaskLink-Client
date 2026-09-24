@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ordersApi, paymentsApi } from '../../api/orders.js';
 import { reviewsApi } from '../../api/reviews.js';
+import { messagesApi } from '../../api/users.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import { formatNaira } from '../../utils/money.js';
-import { Star } from 'lucide-react';
+import { Star, MessageCircle } from 'lucide-react';
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [order, setOrder] = useState(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [revisionMessage, setRevisionMessage] = useState('');
+  const [chatBusy, setChatBusy] = useState(false);
+  const [chatError, setChatError] = useState('');
 
   // Review state
   const [rating, setRating] = useState(0);
@@ -84,6 +88,73 @@ export default function OrderDetailPage() {
 
   const isClient = currentUserId === clientId;
   const isWorker = currentUserId === workerId;
+
+  const openOrCreateConversation = async () => {
+    if (!order || !user) return;
+
+    const currentId = String(user._id || user.id || '');
+    const orderClientId = String(order.client?._id || order.client || '');
+    const orderWorkerId = String(order.worker?._id || order.worker || '');
+
+    if (!orderClientId || !orderWorkerId) {
+      setChatError('This order is missing participant details.');
+      return;
+    }
+
+    if (currentId !== orderClientId && currentId !== orderWorkerId) {
+      setChatError('You are not part of this order.');
+      return;
+    }
+
+    setChatBusy(true);
+    setChatError('');
+
+    try {
+      const conversationsRes = await messagesApi.conversations();
+      const existing = (conversationsRes?.data || []).find((conversation) => {
+        const participants = conversation?.participants || [];
+        const hasClient = participants.some(
+          (participant) => String(participant?._id || participant) === orderClientId
+        );
+        const hasWorker = participants.some(
+          (participant) => String(participant?._id || participant) === orderWorkerId
+        );
+
+        return hasClient && hasWorker;
+      });
+
+      if (existing?._id) {
+        navigate(`/messages/${existing._id}`);
+        return;
+      }
+
+      const startPayload = order.applicationId || order._id;
+      const created = await messagesApi.startConversation(startPayload);
+      const nextConversationId =
+        created?.data?.conversation?._id ||
+        created?.data?._id ||
+        created?.conversation?._id ||
+        created?._id;
+
+      if (nextConversationId) {
+        navigate(`/messages/${nextConversationId}`);
+        return;
+      }
+
+      navigate('/messages');
+    } catch (err) {
+      const status = err?.status || err?.response?.status;
+
+      if (status === 409) {
+        navigate('/messages');
+        return;
+      }
+
+      setChatError(err?.message || 'Unable to open chat right now.');
+    } finally {
+      setChatBusy(false);
+    }
+  };
 
   const pay = async () => {
     setBusy(true);
@@ -182,7 +253,6 @@ export default function OrderDetailPage() {
 
   return (
     <div className="space-y-5 pb-10">
-      {/* Order summary */}
       <div className="card p-5">
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-lg font-bold text-brand-navy">
@@ -200,9 +270,29 @@ export default function OrderDetailPage() {
           Platform fee: {formatNaira(order.platformFeeKobo)} · Worker gets{' '}
           {formatNaira(order.workerNetAmountKobo)}
         </p>
+
+        {(isClient || isWorker) &&
+          ['PAYMENT_SECURED', 'IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED', 'COMPLETED'].includes(
+            order.status
+          ) && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={openOrCreateConversation}
+                disabled={chatBusy}
+                className="btn-secondary w-full flex items-center justify-center gap-2"
+              >
+                <MessageCircle size={18} />
+                {chatBusy ? 'Opening chat...' : 'Message'}
+              </button>
+
+              {chatError && (
+                <p className="text-sm text-red-500 mt-2">{chatError}</p>
+              )}
+            </div>
+          )}
       </div>
 
-      {/* Payment */}
       {isClient && order.status === 'AWAITING_PAYMENT' && (
         <div className="card p-5">
           <p className="text-sm text-gray-600 mb-3">
@@ -221,7 +311,6 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* Worker submits work */}
       {isWorker &&
         ['IN_PROGRESS', 'REVISION_REQUESTED'].includes(order.status) && (
           <div className="card p-5 space-y-3">
@@ -246,7 +335,6 @@ export default function OrderDetailPage() {
           </div>
         )}
 
-      {/* Client reviews submission */}
       {isClient && order.status === 'SUBMITTED' && (
         <div className="card p-5 space-y-3">
           <h3 className="font-semibold text-brand-navy">
@@ -289,7 +377,6 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* Completed */}
       {order.status === 'COMPLETED' && (
         <>
           <div className="card p-5 bg-green-50 border-green-100 text-center">
@@ -309,7 +396,6 @@ export default function OrderDetailPage() {
               </div>
 
               <form onSubmit={submitReview} className="space-y-5">
-                {/* Stars */}
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-2">
                     Your rating
@@ -348,7 +434,6 @@ export default function OrderDetailPage() {
                   )}
                 </div>
 
-                {/* Review */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-2">
                     Your review
