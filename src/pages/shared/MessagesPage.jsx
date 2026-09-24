@@ -39,7 +39,10 @@ export default function MessagesPage() {
           })}
         </div>
       ) : (
-        <EmptyState title="No conversations yet." subtitle="Messages start once you apply to or accept a task." />
+        <EmptyState
+          title="No conversations yet."
+          subtitle="Messages start once the client and worker begin working together."
+        />
       )}
     </div>
   );

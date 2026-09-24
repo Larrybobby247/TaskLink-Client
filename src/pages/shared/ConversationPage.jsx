@@ -26,11 +26,20 @@ export default function ConversationPage() {
   return (
     <div className="flex flex-col h-[75vh]">
       <div className="flex-1 overflow-y-auto space-y-2 p-2">
-        {messages.map((m) => (
-          <div key={m._id} className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${m.sender === user._id ? 'bg-brand-navy text-white ml-auto' : 'bg-white'}`}>
-            {m.text}
-          </div>
-        ))}
+        {messages.map((m) => {
+          const isMine = String(m.sender) === String(user?._id || user?.id || '');
+
+          return (
+            <div
+              key={m._id}
+              className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+                isMine ? 'bg-brand-navy text-white ml-auto' : 'bg-white'
+              }`}
+            >
+              {m.text}
+            </div>
+          );
+        })}
         <div ref={bottomRef} />
       </div>
       <form onSubmit={send} className="flex items-center gap-2 border-t border-gray-100 pt-3">
