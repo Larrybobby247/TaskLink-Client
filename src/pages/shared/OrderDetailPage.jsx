@@ -49,12 +49,22 @@ export default function OrderDetailPage() {
       </div>
     );
   }
+const getUserId = (value) => {
+  if (!value) return null;
 
-  const isClient =
-    String(order.client?._id || order.client) === String(user?._id);
+  if (typeof value === 'object') {
+    return String(value._id || value.id || '');
+  }
 
-  const isWorker =
-    String(order.worker?._id || order.worker) === String(user?._id);
+  return String(value);
+};
+
+const currentUserId = getUserId(user);
+const clientId = getUserId(order.client);
+const workerId = getUserId(order.worker);
+
+const isClient = currentUserId === clientId;
+const isWorker = currentUserId === workerId;
 
   const pay = async () => {
     setBusy(true);
@@ -254,130 +264,127 @@ export default function OrderDetailPage() {
 
       {/* Completed */}
       {order.status === 'COMPLETED' && (
-        <>
-          <div className="card p-5 bg-green-50 border-green-100 text-center">
-            <p className="font-semibold text-green-700">
-              Task completed 🎉
+  <>
+    <div className="card p-5 bg-green-50 border-green-100 text-center">
+      <p className="font-semibold text-green-700">
+        Task completed 🎉
+      </p>
+    </div>
+
+    {isClient && !reviewSubmitted && (
+      <div className="card p-5">
+        <div className="mb-5">
+          <h3 className="font-semibold text-brand-navy text-lg">
+            Rate your experience
+          </h3>
+
+          <p className="text-sm text-gray-500 mt-1">
+            How was your experience working with this worker?
+          </p>
+        </div>
+
+        <form onSubmit={submitReview} className="space-y-5">
+          {/* Stars */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Your rating
+            </p>
+
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className="p-1 transition-transform hover:scale-110"
+                  aria-label={`Rate ${star} out of 5`}
+                >
+                  <Star
+                    size={30}
+                    strokeWidth={1.8}
+                    className={
+                      star <= rating
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
+                    }
+                  />
+                </button>
+              ))}
+            </div>
+
+            {rating > 0 && (
+              <p className="text-xs text-gray-400 mt-2">
+                {rating === 1 && 'Poor'}
+                {rating === 2 && 'Fair'}
+                {rating === 3 && 'Good'}
+                {rating === 4 && 'Very good'}
+                {rating === 5 && 'Excellent'}
+              </p>
+            )}
+          </div>
+
+          {/* Review */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-2">
+              Your review
+            </label>
+
+            <textarea
+              className="input-field min-h-[110px]"
+              placeholder="Share your experience with this worker..."
+              value={reviewMessage}
+              onChange={(e) => setReviewMessage(e.target.value)}
+              maxLength={1000}
+            />
+
+            <p className="text-xs text-gray-400 mt-1 text-right">
+              {reviewMessage.length}/1000
             </p>
           </div>
 
-          {/* Client review */}
-          {isClient && !existingReview && !reviewSubmitted && (
-            <div className="card p-5">
-              <div className="mb-5">
-                <h3 className="font-semibold text-brand-navy text-lg">
-                  Rate your experience
-                </h3>
-
-                <p className="text-sm text-gray-500 mt-1">
-                  How was your experience working with this worker?
-                </p>
-              </div>
-
-              <form onSubmit={submitReview} className="space-y-5">
-
-                {/* Stars */}
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Your rating
-                  </p>
-
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        className="p-1 transition-transform hover:scale-110"
-                        aria-label={`Rate ${star} out of 5`}
-                      >
-                        <Star
-                          size={30}
-                          strokeWidth={1.8}
-                          className={
-                            star <= rating
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
-                          }
-                        />
-                      </button>
-                    ))}
-                  </div>
-
-                  {rating > 0 && (
-                    <p className="text-xs text-gray-400 mt-2">
-                      {rating === 1 && 'Poor'}
-                      {rating === 2 && 'Fair'}
-                      {rating === 3 && 'Good'}
-                      {rating === 4 && 'Very good'}
-                      {rating === 5 && 'Excellent'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Review */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-2">
-                    Your review
-                  </label>
-
-                  <textarea
-                    className="input-field min-h-[110px]"
-                    placeholder="Share your experience with this worker..."
-                    value={reviewMessage}
-                    onChange={(e) => setReviewMessage(e.target.value)}
-                    maxLength={1000}
-                  />
-
-                  <p className="text-xs text-gray-400 mt-1 text-right">
-                    {reviewMessage.length}/1000
-                  </p>
-                </div>
-
-                {reviewError && (
-                  <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">
-                    {reviewError}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={
-                    reviewBusy ||
-                    !rating ||
-                    !reviewMessage.trim()
-                  }
-                  className="btn-primary w-full"
-                >
-                  {reviewBusy ? 'Submitting Review...' : 'Submit Review'}
-                </button>
-              </form>
-            </div>
+          {reviewError && (
+            <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">
+              {reviewError}
+            </p>
           )}
 
-          {/* Review successfully submitted */}
-          {isClient && reviewSubmitted && (
-            <div className="card p-5 text-center">
-              <div className="flex justify-center mb-3">
-                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-                  <Star
-                    size={24}
-                    className="fill-yellow-400 text-yellow-400"
-                  />
-                </div>
-              </div>
+          <button
+            type="submit"
+            disabled={
+              reviewBusy ||
+              !rating ||
+              !reviewMessage.trim()
+            }
+            className="btn-primary w-full"
+          >
+            {reviewBusy
+              ? 'Submitting Review...'
+              : 'Submit Review'}
+          </button>
+        </form>
+      </div>
+    )}
 
-              <h3 className="font-semibold text-brand-navy">
-                Thanks for your review!
-              </h3>
+    {isClient && reviewSubmitted && (
+      <div className="card p-5 text-center">
+        <div className="flex justify-center mb-3">
+          <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+            <Star
+              size={24}
+              className="fill-yellow-400 text-yellow-400"
+            />
+          </div>
+        </div>
 
-              <p className="text-sm text-gray-500 mt-1">
-                Your feedback has been submitted successfully.
-              </p>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
+        <h3 className="font-semibold text-brand-navy">
+          Thanks for your review!
+        </h3>
+
+        <p className="text-sm text-gray-500 mt-1">
+          Your feedback has been submitted successfully.
+        </p>
+      </div>
+    )}
+  </>
+)}
+)} 
