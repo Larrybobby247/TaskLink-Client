@@ -23,13 +23,24 @@ export default function OrderDetailPage() {
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewError, setReviewError] = useState('');
+  const [existingReview, setExistingReview] = useState(null);
 
   const load = () =>
     ordersApi.get(id).then((res) => setOrder(res.data.order));
 
   useEffect(() => {
-    load();
-  }, [id]); // eslint-disable-line
+  load();
+
+  if (user?._id) {
+    reviewsApi.getOrderReview(id)
+      .then((res) => {
+        setExistingReview(res.data.review);
+      })
+      .catch(() => {
+        setExistingReview(null);
+      });
+  }
+}, [id, user?._id]);
 
   if (!order) {
     return (
@@ -251,7 +262,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Client review */}
-          {isClient && !reviewSubmitted && (
+          {isClient && !existingReview && !reviewSubmitted && (
             <div className="card p-5">
               <div className="mb-5">
                 <h3 className="font-semibold text-brand-navy text-lg">
