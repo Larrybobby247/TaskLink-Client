@@ -387,4 +387,3 @@ const isWorker = currentUserId === workerId;
     )}
   </>
 )}
-)} 
