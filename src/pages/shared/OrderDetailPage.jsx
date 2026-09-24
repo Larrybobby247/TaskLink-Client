@@ -9,6 +9,28 @@ import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import { formatNaira } from '../../utils/money.js';
 import { Star, MessageCircle } from 'lucide-react';
 
+const getUserId = (value) => {
+  if (!value) return null;
+  if (typeof value === 'object') return String(value._id || value.id || '');
+  return String(value);
+};
+
+// Revision messages are returned by the order API. Support the common response
+// shapes so the worker can still see the request if the API returns a history
+// array or a single latest-revision field.
+const getLatestRevisionMessage = (order) => {
+  const revisions = Array.isArray(order?.revisions) ? order.revisions : [];
+  const latestRevision = revisions[revisions.length - 1];
+
+  return (
+    latestRevision?.message ||
+    latestRevision?.comment ||
+    order?.latestRevision?.message ||
+    order?.revisionMessage ||
+    ''
+  );
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,7 +42,6 @@ export default function OrderDetailPage() {
   const [revisionMessage, setRevisionMessage] = useState('');
   const [chatBusy, setChatBusy] = useState(false);
   const [chatError, setChatError] = useState('');
-
   const [rating, setRating] = useState(0);
   const [reviewMessage, setReviewMessage] = useState('');
   const [reviewBusy, setReviewBusy] = useState(false);
@@ -33,9 +54,8 @@ export default function OrderDetailPage() {
     setOrder(nextOrder);
 
     if (nextOrder?.status === 'COMPLETED' && user) {
-      const currentUserId = String(user._id || user.id || '');
-      const clientId = String(nextOrder.client?._id || nextOrder.client || '');
-
+      const currentUserId = getUserId(user);
+      const clientId = getUserId(nextOrder.client);
       if (currentUserId === clientId) {
         try {
           const reviewRes = await reviewsApi.getOrderReview(nextOrder._id);
@@ -59,21 +79,15 @@ export default function OrderDetailPage() {
     return <div className="flex justify-center py-16"><Spinner size={32} /></div>;
   }
 
-  const getUserId = (value) => {
-    if (!value) return null;
-    if (typeof value === 'object') return String(value._id || value.id || '');
-    return String(value);
-  };
-
   const currentUserId = getUserId(user);
   const clientId = getUserId(order.client);
   const workerId = getUserId(order.worker);
   const isClient = currentUserId === clientId;
   const isWorker = currentUserId === workerId;
+  const latestRevisionMessage = getLatestRevisionMessage(order);
 
   const openOrCreateConversation = async () => {
     if (!order || !user) return;
-
     const orderClientId = getUserId(order.client);
     const orderWorkerId = getUserId(order.worker);
 
@@ -81,7 +95,6 @@ export default function OrderDetailPage() {
       setChatError('This order is missing participant details.');
       return;
     }
-
     if (currentUserId !== orderClientId && currentUserId !== orderWorkerId) {
       setChatError('You are not part of this order.');
       return;
@@ -89,10 +102,7 @@ export default function OrderDetailPage() {
 
     setChatBusy(true);
     setChatError('');
-
     try {
-      // Always check first. This allows workers to open the conversation even
-      // when the order response does not expose applicationId.
       const conversationsRes = await messagesApi.conversations();
       const existing = (conversationsRes?.data || []).find((conversation) => {
         const participants = conversation?.participants || [];
@@ -114,7 +124,6 @@ export default function OrderDetailPage() {
 
       const created = await messagesApi.startConversation(applicationId);
       const conversationId = created?.data?.conversation?._id || created?.data?._id || created?.conversation?._id || created?._id;
-
       if (conversationId) navigate(`/messages/${conversationId}`);
       else navigate('/messages');
     } catch (err) {
@@ -144,7 +153,7 @@ export default function OrderDetailPage() {
   const requestRevision = async () => {
     setBusy(true);
     try {
-      await ordersApi.revision(order._id, { message: revisionMessage });
+      await ordersApi.revision(order._id, { message: revisionMessage.trim() });
       await load();
       setRevisionMessage('');
     } finally { setBusy(false); }
@@ -208,6 +217,13 @@ export default function OrderDetailPage() {
         </div>
       )}
 
+      {isWorker && order.status === 'REVISION_REQUESTED' && latestRevisionMessage && (
+        <div className="card p-5 border-yellow-200 bg-yellow-50">
+          <h3 className="font-semibold text-yellow-800">Changes requested by the client</h3>
+          <p className="text-sm text-yellow-900 whitespace-pre-wrap mt-2">{latestRevisionMessage}</p>
+        </div>
+      )}
+
       {isWorker && ['IN_PROGRESS', 'REVISION_REQUESTED'].includes(order.status) && (
         <div className="card p-5 space-y-3">
           <h3 className="font-semibold text-brand-navy">Submit your work</h3>
@@ -219,8 +235,8 @@ export default function OrderDetailPage() {
       {isClient && order.status === 'SUBMITTED' && (
         <div className="card p-5 space-y-3">
           <h3 className="font-semibold text-brand-navy">Review submission</h3>
-          {order.submissions?.length > 0 && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">{order.submissions[order.submissions.length - 1].message}</p>}
-          <button onClick={approve} disabled={busy} className="btn-primary flex-1">Approve</button>
+          {order.submissions?.length > 0 && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">{order.submissions[order.submissions.length - 1].message}</p>}
+          <button onClick={approve} disabled={busy} className="btn-primary w-full">Approve</button>
           <textarea className="input-field min-h-[80px]" placeholder="Explain what needs to change..." value={revisionMessage} onChange={(e) => setRevisionMessage(e.target.value)} />
           <button onClick={requestRevision} disabled={busy || !revisionMessage.trim()} className="btn-secondary w-full">Request Revision</button>
         </div>
@@ -233,14 +249,14 @@ export default function OrderDetailPage() {
             <div className="card p-5">
               <div className="mb-5"><h3 className="font-semibold text-brand-navy text-lg">Rate your experience</h3><p className="text-sm text-gray-500 mt-1">How was your experience working with this worker?</p></div>
               <form onSubmit={submitReview} className="space-y-5">
-                <div><p className="text-sm font-medium text-gray-700 mb-2">Your rating</p><div className="flex items-center gap-2">{[1, 2, 3, 4, 5].map((star) => <button key={star} type="button" onClick={() => setRating(star)} className="p-1 transition-transform hover:scale-110" aria-label={`Rate ${star} out of 5`}><Star size={30} strokeWidth={1.8} className={star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} /></button>)}</div>{rating > 0 && <p className="text-xs text-gray-400 mt-2">{rating === 1 && 'Poor'}{rating === 2 && 'Fair'}{rating === 3 && 'Good'}{rating === 4 && 'Very good'}{rating === 5 && 'Excellent'}</p>}</div>
-                <div><label className="text-sm font-medium text-gray-700 block mb-2">Your review</label><textarea className="input-field min-h-[110px]" placeholder="Share your experience with this worker..." value={reviewMessage} onChange={(e) => setReviewMessage(e.target.value)} maxLength={1000} /><p className="text-xs text-gray-400 mt-1 text-right">{reviewMessage.length}/1000</p></div>
+                <div><p className="text-sm font-medium text-gray-700 mb-2">Your rating</p><div className="flex items-center gap-2">{[1, 2, 3, 4, 5].map((star) => <button key={star} type="button" onClick={() => setRating(star)} aria-label={`Rate ${star} stars`}><Star size={26} className={star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} /></button>)}</div></div>
+                <div><label className="text-sm font-medium text-gray-700 block mb-2">Your review</label><textarea className="input-field min-h-[110px]" placeholder="Share your experience with this worker..." value={reviewMessage} onChange={(e) => setReviewMessage(e.target.value)} /></div>
                 {reviewError && <p className="text-sm text-red-500 bg-red-50 rounded-lg p-3">{reviewError}</p>}
                 <button type="submit" disabled={reviewBusy || !rating || !reviewMessage.trim()} className="btn-primary w-full">{reviewBusy ? 'Submitting Review...' : 'Submit Review'}</button>
               </form>
             </div>
           )}
-          {isClient && reviewSubmitted && <div className="card p-5 text-center"><div className="flex justify-center mb-3"><div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center"><Star size={24} className="fill-yellow-400 text-yellow-400" /></div></div><h3 className="font-semibold text-brand-navy">Thanks for your review!</h3><p className="text-sm text-gray-500 mt-1">Your feedback has been submitted successfully.</p></div>}
+          {isClient && reviewSubmitted && <div className="card p-5 text-center"><p className="font-semibold text-green-700">Thanks for your review!</p></div>}
         </>
       )}
     </div>
