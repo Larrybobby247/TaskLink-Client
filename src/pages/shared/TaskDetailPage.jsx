@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Users } from 'lucide-react';
-import { tasksApi } from '../../api/tasks.js';
+import { tasksApi, applicationsApi } from '../../api/tasks.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
 import ErrorState from '../../components/ui/ErrorState.jsx';
@@ -19,10 +19,58 @@ export default function TaskDetailPage() {
   const [message, setMessage] = useState('');
   const [proposedAmount, setProposedAmount] = useState('');
   const [applySuccess, setApplySuccess] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
   const [applyError, setApplyError] = useState('');
 
   useEffect(() => {
-    tasksApi.get(id).then((res) => setTask(res.data.task)).catch((err) => setError(err.message));
+    let mounted = true;
+
+    tasksApi.get(id)
+      .then(async (res) => {
+        if (!mounted) return;
+
+        const loadedTask = res.data.task;
+        setTask(loadedTask);
+
+        // Some API responses already include the current user's application.
+        const embeddedApplication =
+          loadedTask.hasApplied ||
+          loadedTask.appliedByCurrentUser ||
+          loadedTask.userApplication ||
+          loadedTask.myApplication;
+
+        if (embeddedApplication) {
+          const status = typeof embeddedApplication === 'object'
+            ? embeddedApplication.status
+            : undefined;
+          if (!status || !['WITHDRAWN', 'REJECTED'].includes(status)) {
+            setHasApplied(true);
+            setApplySuccess(true);
+            return;
+          }
+        }
+
+        // Also check the worker's applications so the button remains disabled
+        // after navigating away and coming back or refreshing the page.
+        try {
+          const applicationsResponse = await applicationsApi.mine({ task: id });
+          const applications = applicationsResponse.data || [];
+          const application = applications.find((item) => {
+            const taskId = item.task?._id || item.task;
+            return String(taskId) === String(id);
+          });
+
+          if (mounted && application && !['WITHDRAWN', 'REJECTED'].includes(application.status)) {
+            setHasApplied(true);
+            setApplySuccess(true);
+          }
+        } catch {
+          // The task can still be viewed if checking application history fails.
+        }
+      })
+      .catch((err) => mounted && setError(err.message));
+
+    return () => { mounted = false; };
   }, [id]);
 
   if (error) return <ErrorState message={error} />;
@@ -32,6 +80,8 @@ export default function TaskDetailPage() {
 
   const submitApplication = async (e) => {
     e.preventDefault();
+    if (hasApplied || applying) return;
+
     setApplying(true);
     setApplyError('');
     try {
@@ -39,6 +89,8 @@ export default function TaskDetailPage() {
         message,
         proposedAmountKobo: task.budgetType === 'NEGOTIABLE' && proposedAmount ? Math.round(Number(proposedAmount) * 100) : undefined,
       });
+      // Update immediately so a worker cannot submit the same application twice.
+      setHasApplied(true);
       setApplySuccess(true);
     } catch (err) {
       setApplyError(err.message);
@@ -97,7 +149,7 @@ export default function TaskDetailPage() {
         <button onClick={() => navigate(`/client/tasks/${task._id}/applications`)} className="btn-primary w-full">
           Manage Task ({task.applicationCount || 0} applications)
         </button>
-      ) : applySuccess ? (
+      ) : hasApplied || applySuccess ? (
         <div className="card p-5 text-center bg-green-50 border-green-100">
           <p className="font-semibold text-green-700">Application sent!</p>
           <p className="text-sm text-green-600 mt-1">You'll be notified if the client selects you.</p>
@@ -123,7 +175,9 @@ export default function TaskDetailPage() {
               onChange={(e) => setProposedAmount(e.target.value)}
             />
           )}
-          <button className="btn-primary w-full" disabled={applying}>{applying ? 'Applying...' : 'Apply for Task'}</button>
+          <button className="btn-primary w-full" disabled={applying || hasApplied}>
+            {applying ? 'Applying...' : 'Apply for Task'}
+          </button>
         </form>
       )}
     </div>
