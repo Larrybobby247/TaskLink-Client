@@ -23,25 +23,15 @@ export default function OrderDetailPage() {
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewError, setReviewError] = useState('');
-  const [existingReview, setExistingReview] = useState(null);
+  
 
   const load = () =>
     ordersApi.get(id).then((res) => setOrder(res.data.order));
 
   useEffect(() => {
   load();
-
-  if (user?._id) {
-    reviewsApi.getOrderReview(id)
-      .then((res) => {
-        setExistingReview(res.data.review);
-      })
-      .catch(() => {
-        setExistingReview(null);
-      });
-  }
-}, [id, user?._id]);
-
+}, [id]);
+  
   if (!order) {
     return (
       <div className="flex justify-center py-16">
