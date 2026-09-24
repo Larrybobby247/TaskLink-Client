@@ -26,6 +26,7 @@ export const messagesApi = {
   startConversation: (applicationId) => api.post('/messages/conversations', { applicationId }).then((r) => r.data),
   messages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}/messages`, { params }).then((r) => r.data),
   send: (conversationId, payload) => api.post(`/messages/conversations/${conversationId}/messages`, payload).then((r) => r.data),
+  markRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`).then((r) => r.data),
 };
 
 export const subscriptionsApi = {
