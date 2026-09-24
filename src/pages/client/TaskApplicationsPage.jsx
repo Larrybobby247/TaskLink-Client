@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tasksApi, applicationsApi } from '../../api/tasks.js';
 import { ordersApi } from '../../api/orders.js';
+import { messagesApi } from '../../api/users.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
 import { formatNaira } from '../../utils/money.js';
@@ -27,6 +28,17 @@ export default function TaskApplicationsPage() {
     setBusy(true);
     try {
       const { data } = await ordersApi.selectWorker(confirming._id);
+
+      // Create the conversation while the accepted application ID is available.
+      // The order detail endpoint may not expose applicationId yet.
+      try {
+        await messagesApi.startConversation(confirming._id);
+      } catch (err) {
+        // Conversation creation is intentionally non-blocking. The order is
+        // still created and the user can retry from the order page.
+        console.warn('Could not create order conversation:', err);
+      }
+
       navigate(`/client/orders/${data.order._id}`);
     } finally {
       setBusy(false);
