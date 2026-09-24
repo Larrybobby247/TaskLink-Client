@@ -106,6 +106,18 @@ export default function OrderDetailPage() {
       return;
     }
 
+    const applicationId =
+      order.applicationId ||
+      order.application?._id ||
+      order.application;
+
+    if (!applicationId) {
+      setChatError(
+        'This order is missing the application reference needed to start a conversation. Please refresh the order or create the chat from a valid accepted application.'
+      );
+      return;
+    }
+
     setChatBusy(true);
     setChatError('');
 
@@ -128,8 +140,7 @@ export default function OrderDetailPage() {
         return;
       }
 
-      const startPayload = order.applicationId || order._id;
-      const created = await messagesApi.startConversation(startPayload);
+      const created = await messagesApi.startConversation(applicationId);
       const nextConversationId =
         created?.data?.conversation?._id ||
         created?.data?._id ||
