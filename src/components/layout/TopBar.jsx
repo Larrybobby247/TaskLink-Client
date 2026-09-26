@@ -46,7 +46,7 @@ export default function TopBar() {
     <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <img src={Logo} alt="logo" className='w-20'/>
+          <img src={Logo} alt="logo" className='w-24 lg:w-28'/>
           {/* <div className="w-8 h-8 rounded-lg bg-brand-navy flex items-center justify-center text-white font-bold">T</div>
           <span className="font-bold text-lg text-brand-navy">
             Task<span className="text-brand-blue">Link</span>

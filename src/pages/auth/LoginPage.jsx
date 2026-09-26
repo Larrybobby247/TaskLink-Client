@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-brand-bg px-4">
       <div className="w-full max-w-md card p-6">
         <div className="text-center mb-6">
-          <div className='flex justify-center items-center'><img src={Logo} alt="logo" className='w-22'/></div>
+          <div className='flex justify-center items-center'><img src={Logo} alt="logo" className='w-28'/></div>
           <h1 className="text-xl font-bold text-brand-navy">Welcome back</h1>
           <p className="text-sm text-gray-400 mt-1">Need something done? Find someone nearby.</p>
         </div>
