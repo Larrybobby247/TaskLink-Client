@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bell, Menu } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import SideMenu from './SideMenu.jsx';
+import Logo from '../../assets/logo.png'
 
 export default function TopBar() {
   const { user } = useAuth();
@@ -12,10 +13,11 @@ export default function TopBar() {
     <header className="sticky top-0 z-30 bg-white border-b border-gray-100">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand-navy flex items-center justify-center text-white font-bold">T</div>
+          <img src={Logo} alt="logo" className='w-14'/>
+          {/* <div className="w-8 h-8 rounded-lg bg-brand-navy flex items-center justify-center text-white font-bold">T</div>
           <span className="font-bold text-lg text-brand-navy">
             Task<span className="text-brand-blue">Link</span>
-          </span>
+          </span> */}
         </Link>
         <div className="flex items-center gap-4">
           <Link to="/notifications" className="relative text-gray-500 hover:text-brand-navy">

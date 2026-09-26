@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../api/auth.js';
+import Logo from '../../assets/logo.png'
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-brand-bg px-4 py-10">
       <div className="w-full max-w-md card p-6">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-navy text-white flex items-center justify-center font-bold text-xl mx-auto mb-3">T</div>
+          <img src={Logo} alt="logo" className='w-14'/>
           <h1 className="text-xl font-bold text-brand-navy">Create your TaskLink account</h1>
           <p className="text-sm text-gray-400 mt-1">Post tasks or earn money — one account for both.</p>
         </div>

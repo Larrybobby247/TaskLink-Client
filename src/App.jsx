@@ -32,7 +32,18 @@ import MyApplicationsPage from './pages/worker/MyApplicationsPage.jsx';
 import MyJobsPage from './pages/worker/MyJobsPage.jsx';
 import WorkerProfileSettingsPage from './pages/worker/WorkerProfileSettingsPage.jsx';
 
+import AdminLayout from './components/layout/AdminLayout.jsx';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx';
+import AdminUsersPage from './pages/admin/AdminUsersPage.jsx';
+import AdminUserDetailPage from './pages/admin/AdminUserDetailPage.jsx';
+import AdminTasksPage from './pages/admin/AdminTasksPage.jsx';
+import AdminTransactionsPage from './pages/admin/AdminTransactionsPage.jsx';
+import AdminWithdrawalsPage from './pages/admin/AdminWithdrawalsPage.jsx';
+import AdminDisputesPage from './pages/admin/AdminDisputesPage.jsx';
+import AdminDisputeDetailPage from './pages/admin/AdminDisputeDetailPage.jsx';
+import AdminReportsPage from './pages/admin/AdminReportsPage.jsx';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage.jsx';
+import AdminActivityLogPage from './pages/admin/AdminActivityLogPage.jsx';
 
 export default function App() {
   return (
@@ -102,8 +113,18 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute adminOnly />}>
-          <Route element={<AppLayout />}>
+          <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
+            <Route path="/admin/tasks" element={<AdminTasksPage />} />
+            <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
+            <Route path="/admin/withdrawals" element={<AdminWithdrawalsPage />} />
+            <Route path="/admin/disputes" element={<AdminDisputesPage />} />
+            <Route path="/admin/disputes/:id" element={<AdminDisputeDetailPage />} />
+            <Route path="/admin/reports" element={<AdminReportsPage />} />
+            <Route path="/admin/activity-log" element={<AdminActivityLogPage />} />
+            <Route path="/admin/settings" element={<AdminSettingsPage />} />
           </Route>
         </Route>
       </Route>

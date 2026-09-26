@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import Logo from '../../assets/logo.png'
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -31,7 +32,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-brand-bg px-4">
       <div className="w-full max-w-md card p-6">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-brand-navy text-white flex items-center justify-center font-bold text-xl mx-auto mb-3">T</div>
+          <img src={Logo} alt="logo" className='w-14'/>
           <h1 className="text-xl font-bold text-brand-navy">Welcome back</h1>
           <p className="text-sm text-gray-400 mt-1">Need something done? Find someone nearby.</p>
         </div>
