@@ -30,7 +30,7 @@ export default function AdminLayout() {
           {/* <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-bold">T</div> */}
           <div>
             {/* <p className="font-bold leading-tight">TaskLink</p> */}
-            <img src={Logo} alt="logo" className='w-14'/>
+            <img src={Logo} alt="logo" className='w-20'/>
             <p className="text-[11px] text-white/50 leading-tight">Admin</p>
           </div>
         </div>

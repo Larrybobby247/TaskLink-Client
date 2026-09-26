@@ -29,7 +29,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-brand-bg px-4 py-10">
       <div className="w-full max-w-md card p-6">
         <div className="text-center mb-6">
-          <img src={Logo} alt="logo" className='w-14'/>
+          <div className='flex justify-center items-center'><img src={Logo} alt="logo" className='w-22'/></div>
           <h1 className="text-xl font-bold text-brand-navy">Create your TaskLink account</h1>
           <p className="text-sm text-gray-400 mt-1">Post tasks or earn money — one account for both.</p>
         </div>
