@@ -9,6 +9,7 @@ export function timeUntil(date) {
 }
 
 export function timeAgo(date) {
+  if (!date) return '';
   const diffMs = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return 'just now';
@@ -17,4 +18,16 @@ export function timeAgo(date) {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
+}
+
+export function formatMessageTime(date) {
+  if (!date) return '';
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toLocaleString([], {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }

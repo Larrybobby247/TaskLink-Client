@@ -2,6 +2,7 @@ import { api } from './client.js';
 
 export const usersApi = {
   updateProfile: (payload) => api.patch('/users/profile', payload).then((r) => r.data),
+  updateBankDetails: (payload) => api.post('/withdrawals/bank-account', payload).then((r) => r.data),
   getPublicProfile: (id) => api.get(`/users/profile/${id}`).then((r) => r.data),
   switchMode: (mode) => api.post('/users/mode', { mode }).then((r) => r.data),
   uploadProfileImage: (formData) => api.post('/users/profile/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data),
@@ -25,6 +26,7 @@ export const messagesApi = {
   startConversation: (applicationId) => api.post('/messages/conversations', { applicationId }).then((r) => r.data),
   messages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}/messages`, { params }).then((r) => r.data),
   send: (conversationId, payload) => api.post(`/messages/conversations/${conversationId}/messages`, payload).then((r) => r.data),
+  markRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`).then((r) => r.data),
 };
 
 export const subscriptionsApi = {
