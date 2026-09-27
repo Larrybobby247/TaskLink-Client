@@ -22,7 +22,7 @@ export default function SettingsPage() {
   const [savingBank, setSavingBank] = useState(false);
   const [proLoading, setProLoading] = useState(false);
   const [profileImage, setProfileImage] = useState(
-  user?.profileImage || ''
+  user?.profileImage || null
 );
 const [uploadingImage, setUploadingImage] = useState(false);
 const [imageError, setImageError] = useState('');
@@ -66,7 +66,6 @@ const [imageError, setImageError] = useState('');
   const uploadProfileImage = async (file) => {
   if (!file) return;
 
-  // 5MB limit
   if (file.size > 5 * 1024 * 1024) {
     setImageError('Image must be less than 5MB.');
     return;
@@ -77,21 +76,43 @@ const [imageError, setImageError] = useState('');
 
   try {
     const formData = new FormData();
-    formData.append('profileImage', file);
 
-    const { data } = await usersApi.uploadProfileImage(formData);
+    // IMPORTANT: backend expects "image"
+    formData.append('image', file);
 
-    setProfileImage(data.user.profileImage);
-    updateLocalUser(data.user);
+    // Upload to backend
+    const response = await usersApi.uploadProfileImage(formData);
+
+    // Get the updated user returned by the backend
+    const updatedUser = response.user;
+
+    // Update the picture shown on this page
+    setProfileImage(updatedUser.profileImage);
+
+    // Update the user stored in AuthContext
+    updateLocalUser(updatedUser);
   } catch (err) {
+    console.error('PROFILE IMAGE UPLOAD ERROR:', err);
+    console.error('Response:', err?.response?.data);
+
     setImageError(
       err?.response?.data?.message ||
+      err?.response?.data?.error ||
       err?.message ||
       'Unable to upload profile picture.'
     );
   } finally {
     setUploadingImage(false);
   }
+};
+
+  const getInitials = (name = '') => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
   return (
@@ -119,11 +140,19 @@ const [imageError, setImageError] = useState('');
 
   <div className="flex items-center gap-4">
     <div className="relative shrink-0">
-      <img
-        src={profileImage || '/default-avatar.png'}
-        alt={user?.fullName || 'Profile'}
-        className="w-20 h-20 rounded-full object-cover border-2 border-gray-100"
-      />
+      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-100 shrink-0">
+  {profileImage?.url ? (
+    <img
+      src={profileImage.url}
+      alt={user?.fullName || 'Profile'}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full bg-brand-navy text-white flex items-center justify-center text-xl font-semibold">
+      {getInitials(user?.fullName)}
+    </div>
+  )}
+</div>
 
       {uploadingImage && (
         <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
