@@ -92,15 +92,14 @@ const [imageError, setImageError] = useState('');
     // Update the user stored in AuthContext
     updateLocalUser(updatedUser);
   } catch (err) {
-    console.error('PROFILE IMAGE UPLOAD ERROR:', err);
-    console.error('Response:', err?.response?.data);
+  console.error('PROFILE IMAGE UPLOAD ERROR:', err);
+  console.error('STATUS:', err?.status);
+  console.error('MESSAGE:', err?.message);
+  console.error('ERRORS:', err?.errors);
 
-    setImageError(
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      err?.message ||
-      'Unable to upload profile picture.'
-    );
+  setImageError(
+    err?.message || 'Unable to upload profile picture.'
+  );
   } finally {
     setUploadingImage(false);
   }
