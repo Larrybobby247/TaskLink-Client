@@ -21,6 +21,11 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [proLoading, setProLoading] = useState(false);
+  const [profileImage, setProfileImage] = useState(
+  user?.profileImage || ''
+);
+const [uploadingImage, setUploadingImage] = useState(false);
+const [imageError, setImageError] = useState('');
 
   const save = async (e) => {
     e.preventDefault();
@@ -58,6 +63,31 @@ export default function SettingsPage() {
     }
   };
 
+  const uploadProfileImage = async (file) => {
+  if (!file) return;
+
+  setUploadingImage(true);
+  setImageError('');
+
+  try {
+    const formData = new FormData();
+    formData.append('profileImage', file);
+
+    const { data } = await usersApi.uploadProfileImage(formData);
+
+    setProfileImage(data.user.profileImage);
+    updateLocalUser(data.user);
+  } catch (err) {
+    setImageError(
+      err?.response?.data?.message ||
+      err?.message ||
+      'Unable to upload profile picture.'
+    );
+  } finally {
+    setUploadingImage(false);
+  }
+};
+
   return (
     <div className="space-y-5 pb-10 max-w-2xl mx-auto">
 
@@ -68,6 +98,75 @@ export default function SettingsPage() {
           Manage your account, payments and TaskLink preferences.
         </p>
       </div>
+
+      {/* PROFILE PICTURE */}
+<div className="card p-5">
+  <div className="mb-4">
+    <h3 className="font-semibold text-brand-navy">
+      Profile picture
+    </h3>
+
+    <p className="text-sm text-gray-500 mt-1">
+      Add a profile picture so clients and workers can recognize you.
+    </p>
+  </div>
+
+  <div className="flex items-center gap-4">
+    {/* Profile image */}
+    <div className="relative shrink-0">
+      <img
+        src={profileImage || '/default-avatar.png'}
+        alt={user?.fullName || 'Profile'}
+        className="w-20 h-20 rounded-full object-cover border-2 border-gray-100"
+      />
+
+      {uploadingImage && (
+        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+          <span className="text-white text-xs">
+            Uploading...
+          </span>
+        </div>
+      )}
+    </div>
+
+    {/* Upload controls */}
+    <div className="min-w-0">
+      <label
+        htmlFor="profile-image"
+        className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-brand-blue text-white text-sm font-medium cursor-pointer hover:opacity-90"
+      >
+        {uploadingImage ? 'Uploading...' : 'Change picture'}
+      </label>
+
+      <input
+        id="profile-image"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        disabled={uploadingImage}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+
+          if (file) {
+            uploadProfileImage(file);
+          }
+
+          e.target.value = '';
+        }}
+      />
+
+      <p className="text-xs text-gray-400 mt-2">
+        JPG, PNG or WebP. Maximum 5MB.
+      </p>
+
+      {imageError && (
+        <p className="text-sm text-red-500 mt-2">
+          {imageError}
+        </p>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* ACCOUNT */}
       <form onSubmit={save} className="card p-5 space-y-3">
