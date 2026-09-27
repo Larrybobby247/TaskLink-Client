@@ -4,6 +4,7 @@ import { walletApi, withdrawalsApi } from '../../api/orders.js';
 import { formatNaira, nairaToKobo } from '../../utils/money.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
+import StatusBadge from '../../components/ui/StatusBadge.jsx';
 
 const TYPE_LABELS = {
   TASK_EARNING: 'Earning', PLATFORM_FEE: 'Platform fee', WITHDRAWAL: 'Withdrawal',
@@ -16,6 +17,7 @@ export default function WalletPage() {
   const { user, updateLocalUser } = useAuth();
   const [balanceKobo, setBalanceKobo] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [filter, setFilter] = useState('ALL');
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
@@ -36,6 +38,7 @@ export default function WalletPage() {
   const load = () => {
     walletApi.get().then((res) => setBalanceKobo(res.data.balanceKobo));
     walletApi.transactions(filter !== 'ALL' ? { type: filter } : {}).then((res) => setTransactions(res.data));
+    withdrawalsApi.mine({}).then((res) => setWithdrawals(res.data || []));
   };
   useEffect(() => { load(); }, [filter]); // eslint-disable-line
 
@@ -70,6 +73,18 @@ export default function WalletPage() {
     }
   };
 
+  const getWithdrawalStatus = (tx) => {
+    if (tx.type !== 'WITHDRAWAL') return null;
+
+    const withdrawal = withdrawals.find((item) => {
+      const sameAmount = Number(item.amountKobo ?? item.amount ?? item.netAmountKobo ?? 0) === Number(tx.amountKobo ?? tx.amount ?? 0);
+      const sameDate = !item.requestedAt || !tx.createdAt || new Date(item.requestedAt).toDateString() === new Date(tx.createdAt).toDateString();
+      return sameAmount && sameDate;
+    });
+
+    return tx.status || tx.withdrawalStatus || withdrawal?.status || withdrawal?.state || withdrawal?.withdrawalStatus || null;
+  };
+
   if (balanceKobo === null) return <div className="flex justify-center py-16"><Spinner size={32} /></div>;
 
   return (
@@ -96,10 +111,31 @@ export default function WalletPage() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto">
-        {['ALL', 'TASK_EARNING', 'WITHDRAWAL', 'REFUND'].map((t) => <button key={t} onClick={() => setFilter(t)} className={`chip whitespace-nowrap ${filter === t ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-gray-500'}`}>{t === 'ALL' ? 'All' : TYPE_LABELS[t]}</button>)}
+        {['ALL', 'TASK_EARNING', 'WITHDRAWAL', 'REFUND'].map((t) => <button key={t} onClick={() => setFilter(t)} className={`chip whitespace-nowrap ${filter === t ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>{t === 'ALL' ? 'All' : TYPE_LABELS[t] || t}</button>)}
       </div>
 
-      {transactions.length ? <div className="space-y-2">{transactions.map((tx) => <div key={tx._id} className="card p-4 flex items-center justify-between"><div><p className="font-medium text-sm">{tx.description}</p><p className="text-xs text-gray-400">{new Date(tx.createdAt).toLocaleString()}</p></div><p className={`font-semibold ${tx.amountKobo >= 0 ? 'text-green-600' : 'text-red-500'}`}>{tx.amountKobo >= 0 ? '+' : ''}{formatNaira(tx.amountKobo)}</p></div>)}</div> : <EmptyState title="Your wallet has no transactions yet." />}
+      {transactions.length ? (
+        <div className="space-y-2">
+          {transactions.map((tx) => {
+            const withdrawalStatus = getWithdrawalStatus(tx);
+
+            return (
+              <div key={tx._id} className="card p-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium text-sm">{TYPE_LABELS[tx.type] || tx.type}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <p className="font-semibold text-brand-navy">{formatNaira(tx.amountKobo)}</p>
+                  {withdrawalStatus ? <StatusBadge status={withdrawalStatus} /> : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        filter === 'ALL' ? <EmptyState title="No transactions yet" /> : <p className="text-center text-gray-500 py-8">No {TYPE_LABELS[filter] || filter.toLowerCase()} found</p>
+      )}
 
       {showWithdraw && <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50"><form onSubmit={requestWithdrawal} className="bg-white rounded-t-2xl md:rounded-2xl p-6 w-full max-w-sm space-y-3"><h3 className="font-bold text-brand-navy">Withdraw funds</h3><p className="text-xs text-gray-500">Confirm your bank account and enter the amount.</p>{error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>}<input className="input-field" placeholder="Bank name" value={bankForm.bankName} onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })} required /><input className="input-field" inputMode="numeric" maxLength={10} placeholder="10-digit account number" value={bankForm.accountNumber} onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value.replace(/\D/g, '') })} required /><input className="input-field" placeholder="Account name" value={bankForm.accountName} onChange={(e) => setBankForm({ ...bankForm, accountName: e.target.value })} required /><input className="input-field" type="number" min="1" placeholder="Amount (₦)" value={amount} onChange={(e) => setAmount(e.target.value)} required /><div className="flex gap-3 pt-1"><button type="button" onClick={() => setShowWithdraw(false)} className="btn-secondary flex-1">Cancel</button><button type="submit" disabled={busy || !amount} className="btn-primary flex-1">{busy ? 'Processing...' : 'Withdraw'}</button></div></form></div>}
     </div>
