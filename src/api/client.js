@@ -14,13 +14,10 @@ api.interceptors.response.use(
     console.error('API DATA:', err.response?.data);
 
     return Promise.reject({
-      message:
-        err.response?.data?.message ||
-        err.message ||
-        'Something went wrong. Please try again.',
-      errors: err.response?.data?.errors,
-      status: err.response?.status,
-      data: err.response?.data,
-    });
+  message,
+  errors,
+  status: err.response?.status,
+  data: err.response?.data,
+});
   }
 );
