@@ -14,6 +14,8 @@ export const tasksApi = {
   saved: (params) => api.get('/tasks/saved', { params }).then((r) => r.data),
   apply: (taskId, payload) => api.post(`/tasks/${taskId}/applications`, payload).then((r) => r.data),
   applications: (taskId, params) => api.get(`/tasks/${taskId}/applications`, { params }).then((r) => r.data),
+  // Boost/feature a task via Paystack - returns { authorizationUrl, reference, amountKobo }
+  boost: (id) => api.post(`/tasks/${id}/boost`).then((r) => r.data),
 };
 
 export const applicationsApi = {
