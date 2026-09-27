@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import AppLayout from './components/layout/AppLayout.jsx';
 import ProtectedRoute from './components/shared/ProtectedRoute.jsx';
+import AdminRedirect from './components/shared/AdminRedirect.jsx';
 
 import RegisterPage from './pages/auth/RegisterPage.jsx';
 import LoginPage from './pages/auth/LoginPage.jsx';
@@ -56,15 +57,13 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Paystack callback must be public */}
-      <Route
-        path="/payments/callback"
-        element={<PaymentCallbackPage />}
-      />
+      <Route path="/payments/callback" element={<PaymentCallbackPage />} />
 
       {/* Authenticated app shell */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
+          {/* Admin users are sent to the dashboard; other users see the home page. */}
+          <Route path="/" element={<AdminRedirect />} />
 
           <Route path="/tasks" element={<TaskListPage />} />
           <Route path="/tasks/saved" element={<TaskListPage />} />
@@ -72,44 +71,23 @@ export default function App() {
           <Route path="/tasks/:id" element={<TaskDetailPage />} />
 
           <Route path="/client/tasks" element={<MyTasksPage />} />
-          <Route
-            path="/client/tasks/:taskId/applications"
-            element={<TaskApplicationsPage />}
-          />
+          <Route path="/client/tasks/:taskId/applications" element={<TaskApplicationsPage />} />
           <Route path="/client/orders" element={<ActiveOrdersPage />} />
-          <Route
-            path="/client/orders/:id"
-            element={<OrderDetailPage />}
-          />
+          <Route path="/client/orders/:id" element={<OrderDetailPage />} />
 
-          <Route
-            path="/worker/applications"
-            element={<MyApplicationsPage />}
-          />
+          <Route path="/worker/applications" element={<MyApplicationsPage />} />
           <Route path="/worker/jobs" element={<MyJobsPage />} />
-          <Route
-            path="/worker/jobs/:id"
-            element={<OrderDetailPage />}
-          />
+          <Route path="/worker/jobs/:id" element={<OrderDetailPage />} />
 
           <Route path="/wallet" element={<WalletPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/pro" element={<SettingsPage />} />
-          <Route
-            path="/settings/worker-profile"
-            element={<WorkerProfileSettingsPage />}
-          />
+          <Route path="/settings/worker-profile" element={<WorkerProfileSettingsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/messages" element={<MessagesPage />} />
-          <Route
-            path="/messages/:conversationId"
-            element={<ConversationPage />}
-          />
-          <Route
-            path="/reviews/:userId"
-            element={<ReviewsPage />}
-          />
+          <Route path="/messages/:conversationId" element={<ConversationPage />} />
+          <Route path="/reviews/:userId" element={<ReviewsPage />} />
         </Route>
 
         <Route element={<ProtectedRoute adminOnly />}>
