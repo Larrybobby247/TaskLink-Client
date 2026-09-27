@@ -95,10 +95,12 @@ const [imageError, setImageError] = useState('');
   console.error('PROFILE IMAGE UPLOAD ERROR:', err);
   console.error('STATUS:', err?.status);
   console.error('MESSAGE:', err?.message);
-  console.error('ERRORS:', err?.errors);
+  console.error('DATA:', err?.data);
 
   setImageError(
-    err?.message || 'Unable to upload profile picture.'
+    err?.data?.message ||
+    err?.message ||
+    'Unable to upload profile picture.'
   );
   } finally {
     setUploadingImage(false);
