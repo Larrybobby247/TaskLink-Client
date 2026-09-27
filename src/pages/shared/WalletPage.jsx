@@ -13,6 +13,20 @@ const TYPE_LABELS = {
 
 const emptyBank = { bankName: '', accountNumber: '', accountName: '' };
 
+// Transaction type styling
+const getTransactionStyle = (type) => {
+  const styles = {
+    TASK_EARNING: { bg: 'bg-green-50 border-green-200', icon: '💰', color: 'text-green-700' },
+    PLATFORM_FEE: { bg: 'bg-orange-50 border-orange-200', icon: '⚙️', color: 'text-orange-700' },
+    WITHDRAWAL: { bg: 'bg-blue-50 border-blue-200', icon: '🏦', color: 'text-blue-700' },
+    REFUND: { bg: 'bg-purple-50 border-purple-200', icon: '↩️', color: 'text-purple-700' },
+    ADJUSTMENT: { bg: 'bg-yellow-50 border-yellow-200', icon: '📊', color: 'text-yellow-700' },
+    BONUS: { bg: 'bg-pink-50 border-pink-200', icon: '🎁', color: 'text-pink-700' },
+    SUBSCRIPTION_PAYMENT: { bg: 'bg-indigo-50 border-indigo-200', icon: '📦', color: 'text-indigo-700' },
+  };
+  return styles[type] || { bg: 'bg-gray-50 border-gray-200', icon: '📝', color: 'text-gray-700' };
+};
+
 export default function WalletPage() {
   const { user, updateLocalUser } = useAuth();
   const [balanceKobo, setBalanceKobo] = useState(null);
@@ -80,15 +94,6 @@ export default function WalletPage() {
     if (statusUpper === 'APPROVED' || statusUpper === 'SUCCESS') return 'bg-green-50 border-green-200';
     if (statusUpper === 'REJECTED' || statusUpper === 'FAILED') return 'bg-red-50 border-red-200';
     return 'bg-gray-50 border-gray-200';
-  };
-
-  const getStatusTextColor = (status) => {
-    if (!status) return '';
-    const statusUpper = status.toUpperCase();
-    if (statusUpper === 'PENDING') return 'text-blue-800';
-    if (statusUpper === 'APPROVED' || statusUpper === 'SUCCESS') return 'text-green-800';
-    if (statusUpper === 'REJECTED' || statusUpper === 'FAILED') return 'text-red-800';
-    return 'text-gray-800';
   };
 
   if (balanceKobo === null) return <div className="flex justify-center py-16"><Spinner size={32} /></div>;
@@ -187,15 +192,41 @@ export default function WalletPage() {
       {transactions.length ? (
         <div className="space-y-2">
           <h2 className="font-semibold text-brand-navy text-sm">Transaction History</h2>
-          {transactions.map((tx) => (
-            <div key={tx._id} className="card p-4 flex items-center justify-between gap-3">
-              <div>
-                <p className="font-medium text-sm">{TYPE_LABELS[tx.type] || tx.type}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{new Date(tx.createdAt).toLocaleDateString()}</p>
+          {transactions.map((tx) => {
+            const style = getTransactionStyle(tx.type);
+            const isInflow = ['TASK_EARNING', 'REFUND', 'ADJUSTMENT', 'BONUS'].includes(tx.type);
+            
+            return (
+              <div key={tx._id} className={`card p-4 border border-l-4 rounded-lg flex items-center justify-between gap-3 ${style.bg}`} style={{ borderLeftColor: style.bg.includes('green') ? '#10B981' : style.bg.includes('orange') ? '#F97316' : style.bg.includes('blue') ? '#3B82F6' : style.bg.includes('purple') ? '#A855F7' : style.bg.includes('yellow') ? '#EAB308' : style.bg.includes('pink') ? '#EC4899' : '#6366F1' }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{style.icon}</span>
+                    <p className={`font-medium text-sm ${style.color}`}>{TYPE_LABELS[tx.type] || tx.type}</p>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {new Date(tx.createdAt).toLocaleDateString()} · {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  {tx.description && (
+                    <p className="text-xs text-gray-500 mt-1 truncate">{tx.description}</p>
+                  )}
+                  {tx.reference && (
+                    <p className="text-xs text-gray-400 mt-0.5">Ref: {tx.reference}</p>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className={`font-bold text-sm ${isInflow ? 'text-green-700' : 'text-red-700'}`}>
+                    {isInflow ? '+' : '-'}{formatNaira(Math.abs(tx.amountKobo))}
+                  </p>
+                  {tx.type === 'WITHDRAWAL' && (
+                    <p className="text-xs text-gray-500 mt-1">to wallet</p>
+                  )}
+                  {tx.type === 'PLATFORM_FEE' && (
+                    <p className="text-xs text-gray-500 mt-1">deducted</p>
+                  )}
+                </div>
               </div>
-              <p className="font-semibold text-brand-navy">{formatNaira(tx.amountKobo)}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         filter === 'ALL' ? <EmptyState title="No transactions yet" /> : <p className="text-center text-gray-500 py-8">No {TYPE_LABELS[filter] || filter.toLowerCase()} found</p>
