@@ -101,8 +101,6 @@ const [imageError, setImageError] = useState('');
   setImageError(errorDetails);
 } finally {
   setUploadingImage(false);
-  } finally {
-    setUploadingImage(false);
   }
 };
 
