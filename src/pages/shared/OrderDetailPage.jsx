@@ -19,14 +19,15 @@ const getUserId = (value) => {
 // shapes so the worker can still see the request if the API returns a history
 // array or a single latest-revision field.
 const getLatestRevisionMessage = (order) => {
-  const revisions = Array.isArray(order?.revisions) ? order.revisions : [];
-  const latestRevision = revisions[revisions.length - 1];
+  const revisionRequests = Array.isArray(order?.revisionRequests)
+    ? order.revisionRequests
+    : [];
+
+  const latestRevision =
+    revisionRequests[revisionRequests.length - 1];
 
   return (
     latestRevision?.message ||
-    latestRevision?.comment ||
-    order?.latestRevision?.message ||
-    order?.revisionMessage ||
     ''
   );
 };
