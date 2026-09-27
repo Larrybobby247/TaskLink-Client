@@ -9,16 +9,18 @@ export const api = axios.create({
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const message =
-      err.response?.data?.message ||
-      'Something went wrong. Please try again.';
-
-    const errors = err.response?.data?.errors;
+    console.error('API ERROR:', err);
+    console.error('API STATUS:', err.response?.status);
+    console.error('API DATA:', err.response?.data);
 
     return Promise.reject({
-      message,
-      errors,
+      message:
+        err.response?.data?.message ||
+        err.message ||
+        'Something went wrong. Please try again.',
+      errors: err.response?.data?.errors,
       status: err.response?.status,
+      data: err.response?.data,
     });
   }
 );
