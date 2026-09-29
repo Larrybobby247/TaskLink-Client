@@ -1,9 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2, Rocket } from 'lucide-react';
 import { formatNaira } from '../../utils/money.js';
 import { timeUntil } from '../../utils/time.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+
+function isCurrentlyFeatured(task) {
+  return Boolean(task?.isFeatured) && Boolean(task?.featuredUntil) && new Date(task.featuredUntil) > new Date();
+}
 
 export default function TaskCard({ task }) {
   const { user } = useAuth();
@@ -14,11 +18,29 @@ export default function TaskCard({ task }) {
     task?.client?._id &&
     String(task.client._id) === String(user._id);
 
+  // `hasApplied` comes from the backend (GET /api/tasks and GET /api/tasks/:id
+  // both attach it for the logged-in worker - see task.service.js) so we never
+  // need a separate request per card to know this.
+  const alreadyApplied = !isOwner && Boolean(task.hasApplied);
+
+  // `isFeatured` + `featuredUntil` come from the task-boost feature. Sorting
+  // featured tasks to the top of the list happens server-side (see
+  // task.service.js#searchTasks) - this component only renders the indicator.
+  const featured = isCurrentlyFeatured(task);
+
   return (
     <Link
       to={`/tasks/${task._id}`}
-      className="card p-4 flex items-center gap-3 hover:shadow-md transition-shadow"
+      className={`relative card p-4 flex items-center gap-3 hover:shadow-md transition-shadow ${
+        featured ? 'ring-1 ring-orange-200 bg-orange-50/40' : ''
+      }`}
     >
+      {featured && (
+        <span className="absolute -top-2 left-3 chip bg-orange-500 text-white shadow-sm flex items-center gap-1">
+          <Rocket size={11} /> Featured
+        </span>
+      )}
+
       {/* Category Icon */}
       <div
         className="w-11 h-11 rounded-xl flex items-center justify-center text-lg shrink-0"
@@ -72,6 +94,10 @@ export default function TaskCard({ task }) {
         {isOwner ? (
           <span className="btn-primary text-xs py-2 px-4 mt-2 inline-block">
             Manage
+          </span>
+        ) : alreadyApplied ? (
+          <span className="text-xs py-2 px-4 mt-2 inline-flex items-center gap-1 rounded-xl bg-green-50 text-green-700 font-semibold">
+            <CheckCircle2 size={13} /> Applied
           </span>
         ) : (
           <span className="btn-primary text-xs py-2 px-4 mt-2 inline-block">

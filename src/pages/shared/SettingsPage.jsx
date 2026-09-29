@@ -21,6 +21,11 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [savingBank, setSavingBank] = useState(false);
   const [proLoading, setProLoading] = useState(false);
+  const [profileImage, setProfileImage] = useState(
+  user?.profileImage || null
+);
+const [uploadingImage, setUploadingImage] = useState(false);
+const [imageError, setImageError] = useState('');
 
   const save = async (e) => {
     e.preventDefault();
@@ -58,6 +63,56 @@ export default function SettingsPage() {
     }
   };
 
+  const uploadProfileImage = async (file) => {
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024) {
+    setImageError('Image must be less than 5MB.');
+    return;
+  }
+
+  setUploadingImage(true);
+  setImageError('');
+
+  try {
+    const formData = new FormData();
+
+    // IMPORTANT: backend expects "image"
+    formData.append('image', file);
+
+    // Upload to backend
+    const response = await usersApi.uploadProfileImage(formData);
+
+    // Get the updated user returned by the backend
+    const updatedUser = response.user;
+
+    // Update the picture shown on this page
+    setProfileImage(updatedUser.profileImage);
+
+    // Update the user stored in AuthContext
+    updateLocalUser(updatedUser);
+  } catch (err) {
+  const errorDetails = [
+    `Status: ${err?.status || 'unknown'}`,
+    `Message: ${err?.message || 'unknown'}`,
+    `Server response: ${JSON.stringify(err?.data || {})}`,
+  ].join('\n');
+
+  setImageError(errorDetails);
+} finally {
+  setUploadingImage(false);
+  }
+};
+
+  const getInitials = (name = '') => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
   return (
     <div className="space-y-5 pb-10 max-w-2xl mx-auto">
 
@@ -68,6 +123,85 @@ export default function SettingsPage() {
           Manage your account, payments and TaskLink preferences.
         </p>
       </div>
+
+      {/* PROFILE PICTURE */}
+<div className="card p-5">
+  <div className="mb-4">
+    <h3 className="font-semibold text-brand-navy">
+      Profile picture
+    </h3>
+
+    <p className="text-sm text-gray-500 mt-1">
+      Add a profile picture so people can recognize you on TaskLink.
+    </p>
+  </div>
+
+  <div className="flex items-center gap-4">
+    <div className="relative shrink-0">
+      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-100 shrink-0">
+  {profileImage?.url ? (
+    <img
+      src={profileImage.url}
+      alt={user?.fullName || 'Profile'}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full bg-brand-navy text-white flex items-center justify-center text-xl font-semibold">
+      {getInitials(user?.fullName)}
+    </div>
+  )}
+</div>
+
+      {uploadingImage && (
+        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+          <span className="text-white text-xs">
+            Uploading...
+          </span>
+        </div>
+      )}
+    </div>
+
+    <div className="min-w-0">
+      <label
+        htmlFor="profile-image"
+        className={`inline-flex items-center justify-center px-4 py-2 rounded-lg bg-brand-blue text-white text-sm font-medium ${
+          uploadingImage
+            ? 'opacity-50 cursor-not-allowed'
+            : 'cursor-pointer hover:opacity-90'
+        }`}
+      >
+        {uploadingImage ? 'Uploading...' : 'Change picture'}
+      </label>
+
+      <input
+        id="profile-image"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        disabled={uploadingImage}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+
+          if (file) {
+            uploadProfileImage(file);
+          }
+
+          e.target.value = '';
+        }}
+      />
+
+      <p className="text-xs text-gray-400 mt-2">
+        JPG, PNG or WebP · Maximum 5MB
+      </p>
+
+      {imageError && (
+        <p className="text-sm text-red-500 mt-2">
+          {imageError}
+        </p>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* ACCOUNT */}
       <form onSubmit={save} className="card p-5 space-y-3">

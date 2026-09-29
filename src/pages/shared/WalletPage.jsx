@@ -4,6 +4,7 @@ import { walletApi, withdrawalsApi } from '../../api/orders.js';
 import { formatNaira, nairaToKobo } from '../../utils/money.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
+import StatusBadge from '../../components/ui/StatusBadge.jsx';
 
 const TYPE_LABELS = {
   TASK_EARNING: 'Earning', PLATFORM_FEE: 'Platform fee', WITHDRAWAL: 'Withdrawal',
@@ -12,10 +13,25 @@ const TYPE_LABELS = {
 
 const emptyBank = { bankName: '', accountNumber: '', accountName: '' };
 
+// Transaction type styling
+const getTransactionStyle = (type) => {
+  const styles = {
+    TASK_EARNING: { bg: 'bg-green-50 border-green-200', icon: '💰', color: 'text-green-700' },
+    PLATFORM_FEE: { bg: 'bg-orange-50 border-orange-200', icon: '⚙️', color: 'text-orange-700' },
+    WITHDRAWAL: { bg: 'bg-blue-50 border-blue-200', icon: '🏦', color: 'text-blue-700' },
+    REFUND: { bg: 'bg-purple-50 border-purple-200', icon: '↩️', color: 'text-purple-700' },
+    ADJUSTMENT: { bg: 'bg-yellow-50 border-yellow-200', icon: '📊', color: 'text-yellow-700' },
+    BONUS: { bg: 'bg-pink-50 border-pink-200', icon: '🎁', color: 'text-pink-700' },
+    SUBSCRIPTION_PAYMENT: { bg: 'bg-indigo-50 border-indigo-200', icon: '📦', color: 'text-indigo-700' },
+  };
+  return styles[type] || { bg: 'bg-gray-50 border-gray-200', icon: '📝', color: 'text-gray-700' };
+};
+
 export default function WalletPage() {
   const { user, updateLocalUser } = useAuth();
   const [balanceKobo, setBalanceKobo] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [filter, setFilter] = useState('ALL');
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
@@ -36,6 +52,7 @@ export default function WalletPage() {
   const load = () => {
     walletApi.get().then((res) => setBalanceKobo(res.data.balanceKobo));
     walletApi.transactions(filter !== 'ALL' ? { type: filter } : {}).then((res) => setTransactions(res.data));
+    withdrawalsApi.mine({}).then((res) => setWithdrawals(res.data || []));
   };
   useEffect(() => { load(); }, [filter]); // eslint-disable-line
 
@@ -70,6 +87,15 @@ export default function WalletPage() {
     }
   };
 
+  const getStatusColor = (status) => {
+    if (!status) return '';
+    const statusUpper = status.toUpperCase();
+    if (statusUpper === 'PENDING') return 'bg-blue-50 border-blue-200';
+    if (statusUpper === 'APPROVED' || statusUpper === 'SUCCESS') return 'bg-green-50 border-green-200';
+    if (statusUpper === 'REJECTED' || statusUpper === 'FAILED') return 'bg-red-50 border-red-200';
+    return 'bg-gray-50 border-gray-200';
+  };
+
   if (balanceKobo === null) return <div className="flex justify-center py-16"><Spinner size={32} /></div>;
 
   return (
@@ -95,11 +121,116 @@ export default function WalletPage() {
         <button type="button" onClick={() => { setError(''); setShowWithdraw(true); }} className="btn-secondary w-full">{savedBank?.accountNumber ? 'Edit bank account' : 'Add bank account'}</button>
       </div>
 
+      {withdrawals.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="font-semibold text-brand-navy">Withdrawal Requests</h2>
+          {withdrawals.map((w) => (
+            <div key={w._id} className={`card p-4 border-l-4 rounded-lg space-y-3 ${getStatusColor(w.status)}`} style={{ borderLeftColor: w.status?.toUpperCase() === 'PENDING' ? '#3B82F6' : w.status?.toUpperCase() === 'APPROVED' || w.status?.toUpperCase() === 'SUCCESS' ? '#10B981' : '#EF4444' }}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <p className="font-semibold text-sm">{formatNaira(w.netAmountKobo || w.amountKobo)}</p>
+                    <StatusBadge status={w.status} />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    <span className="font-medium">Ref:</span> {w.reference || w._id?.slice(-8).toUpperCase()}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-medium">Requested:</span> {new Date(w.requestedAt).toLocaleDateString()} at {new Date(w.requestedAt).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white/50 rounded-lg p-3 space-y-2">
+                <p className="text-xs text-gray-700">
+                  <span className="font-medium">Bank:</span> {w.bankName}
+                </p>
+                <p className="text-xs text-gray-700">
+                  <span className="font-medium">Account:</span> {w.accountName} · ****{w.accountNumberLast4 || w.accountNumber?.slice(-4)}
+                </p>
+                {w.feeKobo > 0 && (
+                  <p className="text-xs text-gray-700">
+                    <span className="font-medium">Fee:</span> {formatNaira(w.feeKobo)}
+                  </p>
+                )}
+              </div>
+
+              {w.status?.toUpperCase() === 'FAILED' && w.failureReason && (
+                <div className="bg-red-100/50 border border-red-300 rounded p-2">
+                  <p className="text-xs text-red-700">
+                    <span className="font-medium">Failure reason:</span> {w.failureReason}
+                  </p>
+                </div>
+              )}
+
+              {w.status?.toUpperCase() === 'PENDING' && (
+                <p className="text-xs text-blue-700 bg-blue-100/50 rounded p-2">
+                  ⏳ Your withdrawal request is awaiting admin approval. You'll receive a notification once it's processed.
+                </p>
+              )}
+
+              {(w.status?.toUpperCase() === 'APPROVED' || w.status?.toUpperCase() === 'SUCCESS') && (
+                <p className="text-xs text-green-700 bg-green-100/50 rounded p-2">
+                  ✓ Your withdrawal has been approved and processed.
+                </p>
+              )}
+
+              {w.status?.toUpperCase() === 'REJECTED' && (
+                <p className="text-xs text-red-700 bg-red-100/50 rounded p-2">
+                  ✗ Your withdrawal request has been rejected. The amount has been returned to your wallet.
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-2 overflow-x-auto">
-        {['ALL', 'TASK_EARNING', 'WITHDRAWAL', 'REFUND'].map((t) => <button key={t} onClick={() => setFilter(t)} className={`chip whitespace-nowrap ${filter === t ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-gray-500'}`}>{t === 'ALL' ? 'All' : TYPE_LABELS[t]}</button>)}
+        {['ALL', 'TASK_EARNING', 'WITHDRAWAL', 'REFUND'].map((t) => <button key={t} onClick={() => setFilter(t)} className={`chip whitespace-nowrap ${filter === t ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>{t === 'ALL' ? 'All' : TYPE_LABELS[t] || t}</button>)}
       </div>
 
-      {transactions.length ? <div className="space-y-2">{transactions.map((tx) => <div key={tx._id} className="card p-4 flex items-center justify-between"><div><p className="font-medium text-sm">{tx.description}</p><p className="text-xs text-gray-400">{new Date(tx.createdAt).toLocaleString()}</p></div><p className={`font-semibold ${tx.amountKobo >= 0 ? 'text-green-600' : 'text-red-500'}`}>{tx.amountKobo >= 0 ? '+' : ''}{formatNaira(tx.amountKobo)}</p></div>)}</div> : <EmptyState title="Your wallet has no transactions yet." />}
+      {transactions.length ? (
+        <div className="space-y-2">
+          <h2 className="font-semibold text-brand-navy text-sm">Transaction History</h2>
+          {transactions.map((tx) => {
+            const style = getTransactionStyle(tx.type);
+            const isInflow = ['TASK_EARNING', 'REFUND', 'ADJUSTMENT', 'BONUS'].includes(tx.type);
+            
+            return (
+              <div key={tx._id} className={`card p-4 border border-l-4 rounded-lg flex items-center justify-between gap-3 ${style.bg}`} style={{ borderLeftColor: style.bg.includes('green') ? '#10B981' : style.bg.includes('orange') ? '#F97316' : style.bg.includes('blue') ? '#3B82F6' : style.bg.includes('purple') ? '#A855F7' : style.bg.includes('yellow') ? '#EAB308' : style.bg.includes('pink') ? '#EC4899' : '#6366F1' }}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{style.icon}</span>
+                    <p className={`font-medium text-sm ${style.color}`}>{TYPE_LABELS[tx.type] || tx.type}</p>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {new Date(tx.createdAt).toLocaleDateString()} · {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  {tx.description && (
+                    <p className="text-xs text-gray-500 mt-1 truncate">{tx.description}</p>
+                  )}
+                  {tx.reference && (
+                    <p className="text-xs text-gray-400 mt-0.5">Ref: {tx.reference}</p>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className={`font-bold text-sm ${isInflow ? 'text-green-700' : 'text-red-700'}`}>
+                    {isInflow ? '+' : '-'}{formatNaira(Math.abs(tx.amountKobo))}
+                  </p>
+                  {tx.type === 'WITHDRAWAL' && (
+                    <p className="text-xs text-gray-500 mt-1">to wallet</p>
+                  )}
+                  {tx.type === 'PLATFORM_FEE' && (
+                    <p className="text-xs text-gray-500 mt-1">deducted</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        filter === 'ALL' ? <EmptyState title="No transactions yet" /> : <p className="text-center text-gray-500 py-8">No {TYPE_LABELS[filter] || filter.toLowerCase()} found</p>
+      )}
 
       {showWithdraw && <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50"><form onSubmit={requestWithdrawal} className="bg-white rounded-t-2xl md:rounded-2xl p-6 w-full max-w-sm space-y-3"><h3 className="font-bold text-brand-navy">Withdraw funds</h3><p className="text-xs text-gray-500">Confirm your bank account and enter the amount.</p>{error && <div className="bg-red-50 text-red-600 text-sm rounded-lg p-3">{error}</div>}<input className="input-field" placeholder="Bank name" value={bankForm.bankName} onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })} required /><input className="input-field" inputMode="numeric" maxLength={10} placeholder="10-digit account number" value={bankForm.accountNumber} onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value.replace(/\D/g, '') })} required /><input className="input-field" placeholder="Account name" value={bankForm.accountName} onChange={(e) => setBankForm({ ...bankForm, accountName: e.target.value })} required /><input className="input-field" type="number" min="1" placeholder="Amount (₦)" value={amount} onChange={(e) => setAmount(e.target.value)} required /><div className="flex gap-3 pt-1"><button type="button" onClick={() => setShowWithdraw(false)} className="btn-secondary flex-1">Cancel</button><button type="submit" disabled={busy || !amount} className="btn-primary flex-1">{busy ? 'Processing...' : 'Withdraw'}</button></div></form></div>}
     </div>

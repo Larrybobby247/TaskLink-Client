@@ -18,6 +18,7 @@ const COLORS = {
   PENDING: 'bg-blue-50 text-blue-600',
   SHORTLISTED: 'bg-purple-50 text-purple-600',
   ACCEPTED: 'bg-green-50 text-green-700',
+  APPROVED: 'bg-green-50 text-green-700',
   REJECTED: 'bg-red-50 text-red-600',
   WITHDRAWN: 'bg-gray-100 text-gray-500',
   // Withdrawal statuses

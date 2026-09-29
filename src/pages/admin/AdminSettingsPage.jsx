@@ -18,6 +18,7 @@ export default function AdminSettingsPage() {
         withdrawalFeeKobo: s.withdrawalFeeKobo / 100,
         proMonthlyPriceKobo: s.proMonthlyPriceKobo / 100,
         featuredTaskPriceKobo: s.featuredTaskPriceKobo / 100,
+        featuredTaskDurationDays: s.featuredTaskDurationDays,
         maxAttachmentSizeMb: s.maxAttachmentSizeMb,
         maxRevisions: s.maxRevisions,
       });
@@ -40,6 +41,7 @@ export default function AdminSettingsPage() {
         withdrawalFeeKobo: Math.round(Number(form.withdrawalFeeKobo) * 100),
         proMonthlyPriceKobo: Math.round(Number(form.proMonthlyPriceKobo) * 100),
         featuredTaskPriceKobo: Math.round(Number(form.featuredTaskPriceKobo) * 100),
+        featuredTaskDurationDays: Number(form.featuredTaskDurationDays),
         maxAttachmentSizeMb: Number(form.maxAttachmentSizeMb),
         maxRevisions: Number(form.maxRevisions),
       });
@@ -80,7 +82,8 @@ export default function AdminSettingsPage() {
         <Field label="Free plan monthly application limit" k="freeApplicationLimit" />
         <Field label="Withdrawal fee" k="withdrawalFeeKobo" suffix="₦" />
         <Field label="Pro subscription price (monthly)" k="proMonthlyPriceKobo" suffix="₦" />
-        <Field label="Featured task price" k="featuredTaskPriceKobo" suffix="₦" />
+        <Field label="Task boost fee" k="featuredTaskPriceKobo" suffix="₦" />
+        <Field label="Task boost duration" k="featuredTaskDurationDays" suffix="days" />
         <Field label="Max attachment size" k="maxAttachmentSizeMb" suffix="MB" />
         <Field label="Max revisions per order" k="maxRevisions" />
         <button className="btn-primary w-full" disabled={saving}>{saving ? 'Saving...' : 'Save settings'}</button>

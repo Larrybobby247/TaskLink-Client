@@ -11,6 +11,7 @@ api.interceptors.response.use(
   (err) => {
     const message =
       err.response?.data?.message ||
+      err.message ||
       'Something went wrong. Please try again.';
 
     const errors = err.response?.data?.errors;
@@ -19,6 +20,7 @@ api.interceptors.response.use(
       message,
       errors,
       status: err.response?.status,
+      data: err.response?.data || {},
     });
   }
 );
