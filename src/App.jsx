@@ -52,6 +52,7 @@ import AdminDisputeDetailPage from './pages/admin/AdminDisputeDetailPage.jsx';
 import AdminReportsPage from './pages/admin/AdminReportsPage.jsx';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage.jsx';
 import AdminActivityLogPage from './pages/admin/AdminActivityLogPage.jsx';
+import PublicLayout from './components/public/PublicLayout.jsx';
 
 export default function App() {
   return (
