@@ -10,6 +10,14 @@ import VerifyEmailPage from './pages/auth/VerifyEmailPage.jsx';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
 
+import RootGate from './pages/public/RootGate.jsx';
+import AboutPage from './pages/public/AboutPage.jsx';
+import FaqPage from './pages/public/FaqPage.jsx';
+import ContactPage from './pages/public/ContactPage.jsx';
+import PrivacyPage from './pages/public/PrivacyPage.jsx';
+import TermsPage from './pages/public/TermsPage.jsx';
+import NotFoundPage from './pages/public/NotFoundPage.jsx';
+
 import HomePage from './pages/shared/HomePage.jsx';
 import TaskListPage from './pages/shared/TaskListPage.jsx';
 import TaskDetailPage from './pages/shared/TaskDetailPage.jsx';
@@ -48,6 +56,18 @@ import AdminActivityLogPage from './pages/admin/AdminActivityLogPage.jsx';
 export default function App() {
   return (
     <Routes>
+
+      {/* "/" shows the landing page to visitors and the dashboard to signed-in users */}
+      <Route path="/" element={<RootGate />} />
+
+      {/* Public marketing + legal pages */}
+      <Route element={<PublicLayout />}>
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+      </Route>
       {/* Public auth routes */}
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
@@ -64,8 +84,6 @@ export default function App() {
       {/* Authenticated app shell */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
-
           <Route path="/tasks" element={<TaskListPage />} />
           <Route path="/tasks/saved" element={<TaskListPage />} />
           <Route path="/tasks/create" element={<PostTaskPage />} />

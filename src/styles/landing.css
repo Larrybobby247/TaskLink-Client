@@ -1,0 +1,13 @@
+/* Styles for the public marketing pages. Everything else uses Tailwind utilities. */
+.container-x { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+
+@keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.animate-floaty { animation: floaty 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .animate-floaty { animation: none; }
+}
