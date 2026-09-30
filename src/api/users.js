@@ -8,6 +8,8 @@ export const usersApi = {
   uploadProfileImage: (formData) => api.post('/users/profile/image', formData).then((r) => r.data),
   getMyWorkerProfile: () => api.get('/users/worker-profile/me').then((r) => r.data),
   updateWorkerProfile: (payload) => api.patch('/users/worker-profile/me', payload).then((r) => r.data),
+  updateNotificationPreferences: (payload) => api.patch('/users/notifications-preferences', payload).then((r) => r.data),
+  deactivateAccount: () => api.post('/users/deactivate').then((r) => r.data),
 };
 
 export const workersApi = {

@@ -18,6 +18,7 @@ import {
 
 import { messagesApi, notificationsApi } from '../../api/users.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import ConfirmModal from '../ui/ConfirmModal.jsx';
 
 const getId = (value) => String(value?._id || value?.id || value || '');
 
@@ -65,6 +66,7 @@ export default function SideMenu({ open, onClose }) {
   const { user, logout } = useAuth();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const currentUserId = getId(user);
 
   useEffect(() => {
@@ -122,11 +124,6 @@ export default function SideMenu({ open, onClose }) {
     { to: '/profile', label: 'Reviews', icon: Star },
   ];
 
-  const handleLogout = () => {
-    logout();
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-[100]">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" onClick={onClose} />
@@ -176,7 +173,7 @@ export default function SideMenu({ open, onClose }) {
               <HelpCircle size={19} strokeWidth={2} />
               <span className="text-sm font-medium">Help & Support</span>
             </Link>
-            <button type="button" onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-brand-navy transition-colors text-left">
+            <button type="button" onClick={() => setConfirmingLogout(true)} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-brand-navy transition-colors text-left">
               <LogOut size={19} strokeWidth={2} />
               <span className="text-sm font-medium">Log Out</span>
             </button>
@@ -195,6 +192,20 @@ export default function SideMenu({ open, onClose }) {
           </div>
         )}
       </aside>
+
+      {confirmingLogout && (
+        <ConfirmModal
+          title="Log out of TaskLink?"
+          description="Are you sure you want to log out? You'll need to sign in again to access your account."
+          confirmLabel="Log out"
+          danger
+          onConfirm={async () => {
+            await logout();
+            onClose();
+          }}
+          onClose={() => setConfirmingLogout(false)}
+        />
+      )}
     </div>
   );
 }

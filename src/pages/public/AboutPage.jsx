@@ -112,7 +112,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <div className="pt-20"><CtaBanner /></div>
+      <div className="pt-20 mb-24"><CtaBanner /></div>
     </>
   );
 }

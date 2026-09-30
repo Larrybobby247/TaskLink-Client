@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import Logo from '../../assets/logo.png'
+import PasswordInput from '../../components/ui/PasswordInput.jsx';
+import Logo from '../../assets/logo.png';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -41,7 +42,7 @@ export default function LoginPage() {
 
         <form onSubmit={onSubmit} className="space-y-3">
           <input className="input-field" type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-          <input className="input-field" type="password" placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+          <PasswordInput placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
           <div className="text-right">
             <Link to="/forgot-password" className="text-sm text-brand-blue">Forgot password?</Link>
           </div>

@@ -8,6 +8,7 @@ import ConfirmModal from '../../components/admin/ConfirmModal.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import TaskListSkeleton from '../../components/task/TaskListSkeleton.jsx';
+import { timeAgo } from '../../utils/time.js';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All' },
@@ -15,6 +16,15 @@ const STATUS_OPTIONS = [
   { value: 'SUSPENDED', label: 'Suspended' },
   { value: 'DEACTIVATED', label: 'Deactivated' },
 ];
+
+// A user is treated as "online now" if we've seen activity from them in the
+// last 5 minutes - matches the throttle window in auth.middleware.js.
+function lastSeenLabel(user) {
+  const at = user.lastActiveAt || user.lastLoginAt;
+  if (!at) return 'Never';
+  const isOnlineNow = Date.now() - new Date(at).getTime() < 5 * 60 * 1000;
+  return isOnlineNow ? 'Online now' : timeAgo(at);
+}
 
 export default function AdminUsersPage() {
   const [q, setQ] = useState('');
@@ -61,36 +71,44 @@ export default function AdminUsersPage() {
       ) : state.items.length ? (
         <div className="card divide-y divide-gray-100 overflow-hidden">
           <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-xs font-semibold text-gray-400 bg-gray-50">
-            <span className="col-span-4">User</span>
+            <span className="col-span-3">User</span>
             <span className="col-span-2">Plan</span>
             <span className="col-span-2">Rating</span>
             <span className="col-span-2">Status</span>
+            <span className="col-span-1">Last seen</span>
             <span className="col-span-2 text-right">Actions</span>
           </div>
-          {state.items.map((u) => (
-            <div key={u._id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 px-4 py-3 items-center">
-              <Link to={`/admin/users/${u._id}`} className="md:col-span-4 min-w-0">
-                <p className="font-medium text-sm truncate">{u.fullName} {u.identityVerified && <span className="text-brand-blue">✓</span>}</p>
-                <p className="text-xs text-gray-400 truncate">@{u.username} · {u.email}</p>
-              </Link>
-              <span className="md:col-span-2 text-xs">{u.plan === 'PRO' ? <span className="chip bg-purple-50 text-purple-600">PRO</span> : 'Free'}</span>
-              <span className="md:col-span-2 text-xs text-gray-500">⭐ {u.rating?.toFixed?.(1) || '—'} ({u.reviewCount || 0})</span>
-              <span className="md:col-span-2"><StatusBadge status={u.accountStatus} /></span>
-              <div className="md:col-span-2 flex flex-wrap gap-1.5 justify-start md:justify-end">
-                {!u.identityVerified && (
-                  <button onClick={() => setConfirmAction({ type: 'verify', user: u })} className="text-xs font-medium text-brand-blue">Verify</button>
-                )}
-                {u.accountStatus === 'ACTIVE' ? (
-                  <button onClick={() => setConfirmAction({ type: 'suspend', user: u })} className="text-xs font-medium text-yellow-600">Suspend</button>
-                ) : u.accountStatus === 'SUSPENDED' ? (
-                  <button onClick={() => setConfirmAction({ type: 'unsuspend', user: u })} className="text-xs font-medium text-green-600">Unsuspend</button>
-                ) : null}
-                {u.accountStatus !== 'DEACTIVATED' && (
-                  <button onClick={() => setConfirmAction({ type: 'deactivate', user: u })} className="text-xs font-medium text-red-500">Deactivate</button>
-                )}
+          {state.items.map((u) => {
+            const online = u.lastActiveAt && Date.now() - new Date(u.lastActiveAt).getTime() < 5 * 60 * 1000;
+            return (
+              <div key={u._id} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-3 px-4 py-3 items-center">
+                <Link to={`/admin/users/${u._id}`} className="md:col-span-3 min-w-0">
+                  <p className="font-medium text-sm truncate">{u.fullName} {u.identityVerified && <span className="text-brand-blue">✓</span>}</p>
+                  <p className="text-xs text-gray-400 truncate">@{u.username} · {u.email}</p>
+                </Link>
+                <span className="md:col-span-2 text-xs">{u.plan === 'PRO' ? <span className="chip bg-purple-50 text-purple-600">PRO</span> : 'Free'}</span>
+                <span className="md:col-span-2 text-xs text-gray-500">⭐ {u.rating?.toFixed?.(1) || '—'} ({u.reviewCount || 0})</span>
+                <span className="md:col-span-2"><StatusBadge status={u.accountStatus} /></span>
+                <span className="md:col-span-1 text-xs flex items-center gap-1.5">
+                  {online && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />}
+                  <span className={online ? 'text-green-600 font-medium' : 'text-gray-400'}>{lastSeenLabel(u)}</span>
+                </span>
+                <div className="md:col-span-2 flex flex-wrap gap-1.5 justify-start md:justify-end">
+                  {!u.identityVerified && (
+                    <button onClick={() => setConfirmAction({ type: 'verify', user: u })} className="text-xs font-medium text-brand-blue">Verify</button>
+                  )}
+                  {u.accountStatus === 'ACTIVE' ? (
+                    <button onClick={() => setConfirmAction({ type: 'suspend', user: u })} className="text-xs font-medium text-yellow-600">Suspend</button>
+                  ) : u.accountStatus === 'SUSPENDED' ? (
+                    <button onClick={() => setConfirmAction({ type: 'unsuspend', user: u })} className="text-xs font-medium text-green-600">Unsuspend</button>
+                  ) : null}
+                  {u.accountStatus !== 'DEACTIVATED' && (
+                    <button onClick={() => setConfirmAction({ type: 'deactivate', user: u })} className="text-xs font-medium text-red-500">Deactivate</button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <EmptyState title="No users found" />

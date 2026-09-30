@@ -5,6 +5,14 @@ import ConfirmModal from '../../components/admin/ConfirmModal.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
 import { formatNaira } from '../../utils/money.js';
+import { timeAgo } from '../../utils/time.js';
+
+function lastSeenLabel(user) {
+  const at = user.lastActiveAt || user.lastLoginAt;
+  if (!at) return 'Never';
+  const isOnlineNow = Date.now() - new Date(at).getTime() < 5 * 60 * 1000;
+  return isOnlineNow ? 'Online now' : timeAgo(at);
+}
 
 export default function AdminUserDetailPage() {
   const { id } = useParams();
@@ -41,10 +49,11 @@ export default function AdminUserDetailPage() {
           <div>
             <p className="font-bold text-brand-navy">{user.fullName} {user.identityVerified && <span className="text-brand-blue text-sm">✓ Verified</span>}</p>
             <p className="text-sm text-gray-400">@{user.username} · {user.email} · {user.phone}</p>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 flex-wrap items-center">
               <StatusBadge status={user.accountStatus} />
               {user.plan === 'PRO' && <span className="chip bg-purple-50 text-purple-600">PRO</span>}
               <span className="chip bg-gray-100 text-gray-500">{user.role}</span>
+              <span className="text-xs text-gray-400">Last seen: {lastSeenLabel(user)}</span>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../api/auth.js';
 import Logo from '../../assets/logo.png'
+// import PasswordInput from '../../components/ui/PasswordInput.jsx';
 
 export default function RegisterPage() {
   const navigate = useNavigate();

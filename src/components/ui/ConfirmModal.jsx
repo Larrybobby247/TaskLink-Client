@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 /**
  * Generic confirmation modal for any "are you sure?" action that needs a
- * brief description and an async confirm handler (e.g. boosting a task,
+ * brief description and an async confirm handler (log out, boosting a task,
  * withdrawing an application). Not admin-specific - safe to use anywhere.
  */
 export default function ConfirmModal({
@@ -31,7 +31,7 @@ export default function ConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-[110]">
       <div className="bg-white rounded-t-2xl md:rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-brand-navy mb-2">{title}</h3>
         {description && <p className="text-sm text-gray-600 mb-4">{description}</p>}

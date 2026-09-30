@@ -67,7 +67,7 @@ function SectionHead({ tag, title, sub, light = false }) {
     <Reveal className="container-x text-center">
       <span className={`mb-3.5 inline-block text-xs font-bold uppercase tracking-[.12em] ${light ? 'text-blue-300' : 'text-brand-blue'}`}>{tag}</span>
       <h2 className={`text-[clamp(1.75rem,3.4vw,2.5rem)] font-extrabold leading-tight tracking-tight ${light ? 'text-white' : 'text-brand-navy'}`}>{title}</h2>
-      {sub && <p className={`mx-auto mt-4 max-w-xl text-[1.05rem] ${light ? 'text-blue-200/80' : 'text-slate-500'}`}>{sub}</p>}
+      {sub && <p className={`mx-auto mb-3 mt-4 max-w-xl text-[1.05rem] ${light ? 'text-blue-200/80' : 'text-slate-500'}`}>{sub}</p>}
     </Reveal>
   );
 }
@@ -90,7 +90,7 @@ export default function LandingPage() {
   return (
     <>
       {/* ============ HERO ============ */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#F4F8FE] to-white pb-20 pt-36 md:pb-24">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F4F8FE] to-white pb-20 pt-36 md:pb-24 mb-24">
         <div className="pointer-events-none absolute -right-48 -top-48 h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle,rgba(47,111,228,.12),transparent_65%)]" />
         <div className="container-x relative grid items-center gap-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
           <div>
@@ -153,7 +153,7 @@ export default function LandingPage() {
 
       {/* ============ HOW IT WORKS ============ */}
       <section id="how-it-works" className="scroll-mt-24 border-y border-slate-200 bg-[#F7F9FC] py-20 md:py-24">
-        <SectionHead tag="How It Works" title="Getting things done is this simple" sub="Three easy steps — no complicated processes, no guesswork." />
+        <SectionHead tag="How It Works" title="Getting things done is this simple" sub="Three easy steps, no complicated processes, no guesswork." />
         <div className="container-x mt-14 grid gap-7 md:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, text }, i) => (
             <Reveal key={title} delay={i * 90} className="rounded-2xl border border-slate-200 bg-white p-8 transition hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(21,44,72,.10)]">
@@ -168,7 +168,7 @@ export default function LandingPage() {
 
       {/* ============ TWO WAYS ============ */}
       <section id="post-a-task" className="scroll-mt-24 py-20 md:py-24">
-        <SectionHead tag="For Everyone" title="Two ways to use TaskLink" sub="One account does both. Post a task today, earn tomorrow — switch modes whenever you like." />
+        <SectionHead tag="For Everyone" title="Two ways to use TaskLink" sub="One account does both. Post a task today, earn tomorrow, switch modes whenever you like." />
         <div className="container-x mt-14 grid gap-7 lg:grid-cols-2">
           <Reveal className="rounded-[20px] bg-brand-navy p-9 text-white transition hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(21,44,72,.25)] md:p-10">
             <span className="mb-3.5 block text-xs font-bold uppercase tracking-widest text-blue-300">I Need Something Done</span>
@@ -259,7 +259,7 @@ export default function LandingPage() {
 
       {/* ============ TRUST ============ */}
       <section className="bg-brand-navy py-20 md:py-24">
-        <SectionHead light tag="Why TaskLink" title="Built to make getting things done easier." sub="We keep every task safe, clear, and fair — for the person posting and the person doing the work." />
+        <SectionHead light tag="Why TaskLink" title="Built to make getting things done easier." sub="We keep every task safe, clear, and fair for the person posting and the person doing the work." />
         <div className="container-x mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST.map(({ icon: Icon, title, text }, i) => (
             <Reveal key={title} delay={i * 70} className="rounded-2xl border border-white/10 bg-white/[.06] p-7 transition hover:-translate-y-[3px] hover:bg-white/10">

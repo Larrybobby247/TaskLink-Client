@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { tasksApi, applicationsApi } from '../../api/tasks.js';
 import { ordersApi } from '../../api/orders.js';
 import { messagesApi } from '../../api/users.js';
@@ -57,13 +57,17 @@ export default function TaskApplicationsPage() {
           {applications.map((app) => (
             <div key={app._id} className="card p-4">
               <div className="flex items-center gap-3">
-                {app.worker?.profileImage?.url ? (
-                  <img src={app.worker.profileImage.url} className="w-11 h-11 rounded-full object-cover" alt="" />
-                ) : (
-                  <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center font-semibold">{app.worker?.fullName?.[0]}</div>
-                )}
+                {/* Avatar + name link through to the applicant's public profile,
+                    so the client can review who they are before accepting. */}
+                <Link to={`/profile/${app.worker?._id}`} className="shrink-0">
+                  {app.worker?.profileImage?.url ? (
+                    <img src={app.worker.profileImage.url} className="w-11 h-11 rounded-full object-cover" alt="" />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center font-semibold">{app.worker?.fullName?.[0]}</div>
+                  )}
+                </Link>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{app.worker?.fullName}</p>
+                  <Link to={`/profile/${app.worker?._id}`} className="font-semibold truncate hover:text-brand-blue block">{app.worker?.fullName}</Link>
                   <p className="text-xs text-gray-400">⭐ {app.worker?.rating?.toFixed?.(1) || '—'} · {app.worker?.completedTasksAsWorker || 0} tasks completed</p>
                 </div>
                 {app.proposedAmountKobo && <p className="font-bold text-green-600">{formatNaira(app.proposedAmountKobo)}</p>}
