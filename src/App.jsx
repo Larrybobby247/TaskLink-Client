@@ -30,6 +30,8 @@ import MessagesPage from './pages/shared/MessagesPage.jsx';
 import ConversationPage from './pages/shared/ConversationPage.jsx';
 import ReviewsPage from './pages/shared/ReviewsPage.jsx';
 import PaymentCallbackPage from './pages/shared/PaymentCallbackPage.jsx';
+import HelpPage from './pages/shared/HelpPage.jsx';
+import PublicProfilePage from './pages/shared/PublicProfilePage.jsx';
 
 import PostTaskPage from './pages/client/PostTaskPage.jsx';
 import MyTasksPage from './pages/client/MyTasksPage.jsx';
@@ -115,6 +117,8 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/pro" element={<SettingsPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/profile/:id" element={<PublicProfilePage />} />
           <Route
             path="/settings/worker-profile"
             element={<WorkerProfileSettingsPage />}
