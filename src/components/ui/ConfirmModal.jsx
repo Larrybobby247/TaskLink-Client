@@ -31,7 +31,7 @@ export default function ConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center z-[110]">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[110] p-4">
       <div className="bg-white rounded-t-2xl md:rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-brand-navy mb-2">{title}</h3>
         {description && <p className="text-sm text-gray-600 mb-4">{description}</p>}
