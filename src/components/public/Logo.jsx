@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Logo from '../../assets/logo.png';
+import logo from '../../assets/logo.png';
 
 export default function Logo({ light = false, className = '' }) {
   return (
@@ -16,7 +16,7 @@ export default function Logo({ light = false, className = '' }) {
         </svg>
       </span>
       TaskLink */}
-      <img src={Logo} alt="Logo" className='w-26 lg:w-30 '/>
+      <img src={logo} alt="Logo" className='w-26 lg:w-30 '/>
     </Link>
   );
 }
