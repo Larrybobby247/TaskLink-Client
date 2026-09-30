@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowLeftRight } from 'lucide-react';
 import { useMode } from '../../context/ModeContext.jsx';
 
 export default function ModeSwitcher() {
@@ -24,8 +25,9 @@ export default function ModeSwitcher() {
         {isWorker ? '🧑‍💻 Worker Mode' : '👤 Client Mode'}
       </span>
 
-      <span className="text-brand-blue font-semibold whitespace-nowrap">
-        → {isWorker ? 'Client' : 'Earning'}
+      <span className="flex items-center gap-1.5 text-brand-blue font-semibold whitespace-nowrap">
+        <ArrowLeftRight size={16} strokeWidth={2.2} />
+        {isWorker ? 'Client' : 'Earning'}
       </span>
     </button>
   );
