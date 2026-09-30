@@ -192,6 +192,8 @@ export default function SideMenu({ open, onClose }) {
           </div>
         )}
       </aside>
+    </div>
+)}
 
       {confirmingLogout && (
         <ConfirmModal
@@ -206,6 +208,3 @@ export default function SideMenu({ open, onClose }) {
           onClose={() => setConfirmingLogout(false)}
         />
       )}
-    </div>
-  );
-}
