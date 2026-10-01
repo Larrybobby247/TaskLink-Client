@@ -7,21 +7,42 @@ import Spinner from '../../components/ui/Spinner.jsx';
 import HomePage from '../shared/HomePage.jsx';
 import LandingPage from './LandingPage.jsx';
 
-/**
- * The "/" route. First-time visitors and logged-out users see the marketing
- * landing page; signed-in users go straight to their dashboard (the same
- * HomePage as before), so nothing changes for existing users.
- */
 export default function RootGate() {
-  const { user, loading } = useAuth();
-  if (loading) 
-    return <div className="flex min-h-screen items-center justify-center"><Spinner size={80} /></div>;
-  }
-  if (user && !user.emailVerified) {
-    return <Navigate to="/verify-email" state={{ email: user.email }} replace />;
-  }
-  if (user) {
-    return <AppLayout><HomePage /></AppLayout>;
-  }
-  return <PublicLayout><LandingPage /></PublicLayout>;
+const { user, loading } = useAuth();
+
+if (loading) {
+return (
+<div className="flex min-h-screen items-center justify-center">
+<Spinner size={80} />
+</div>
+);
+}
+
+if (!user) {
+return (
+<PublicLayout>
+<LandingPage />
+</PublicLayout>
+);
+}
+
+if (!user.emailVerified) {
+return (
+<Navigate
+to="/verify-email"
+state={{ email: user.email }}
+replace
+/>
+);
+}
+
+if (user.role === 'admin') {
+return <Navigate to="/admin" replace />;
+}
+
+return (
+<AppLayout>
+<HomePage />
+</AppLayout>
+);
 }
