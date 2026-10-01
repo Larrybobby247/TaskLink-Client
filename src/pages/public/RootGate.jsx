@@ -16,7 +16,7 @@ export default function RootGate() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center"><Spinner size={32} /></div>;
+    return <div className="flex min-h-screen items-center justify-center"><Spinner size={120} /></div>;
   }
   if (user && !user.emailVerified) {
     return <Navigate to="/verify-email" state={{ email: user.email }} replace />;
