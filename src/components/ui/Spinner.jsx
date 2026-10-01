@@ -1,7 +1,7 @@
 import React from 'react';
 import logo from '../../assets/logo.png';
 
-export default function Spinner({ size = 24, className = '', animation = 'orbit' }) {
+export default function Spinner({ size = 60, className = '', animation = 'orbit' }) {
   const animationClasses = {
     orbit: 'animate-spin',
     pulse: 'animate-pulse',
