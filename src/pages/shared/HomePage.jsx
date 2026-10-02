@@ -14,7 +14,7 @@ import {
   Video,
   Megaphone,
   Keyboard,
-  Broom,
+  Brush,
   Plus,
 } from 'lucide-react';
 
@@ -47,7 +47,10 @@ const CATEGORY_ICONS = {
   'video-editing': Video,
   'social-media': Megaphone,
   'typing-data-entry': Keyboard,
-  cleaning: Broom,
+  // FIX: lucide-react has no "Broom" icon (that import was silently breaking
+  // this component - React throws "Element type is invalid" when a
+  // component resolves to `undefined`). Brush is the closest real icon.
+  cleaning: Brush,
   other: Plus,
 };
 
@@ -88,9 +91,6 @@ export default function HomePage() {
         : Promise.resolve(null),
     ])
       .then(([catRes, taskRes, walletRes]) => {
-        console.log('CATEGORY RESPONSE:', catRes);
-        console.log('CATEGORY DATA:', catRes.data);
-
         if (!mounted) return;
 
         setCategories(catRes.data.categories || []);
@@ -121,6 +121,15 @@ export default function HomePage() {
       mounted = false;
     };
   }, [mode]);
+
+  /**
+   * In client mode, tapping a category should jump straight into posting a
+   * task with that category already chosen (PostTaskPage reads `?category=`
+   * off the URL). In worker mode it should keep browsing tasks in that
+   * category, unchanged from before.
+   */
+  const categoryHref = (categoryId) =>
+    mode === 'client' ? `/tasks/create?category=${categoryId}` : `/tasks?category=${categoryId}`;
 
 
   /* -------------------------------------------------------
@@ -258,7 +267,7 @@ export default function HomePage() {
             return (
               <Link
                 key={category._id}
-                to={`/tasks?category=${category._id}`}
+                to={categoryHref(category._id)}
                 className="flex flex-col items-center text-center group"
               >
 
@@ -350,4 +359,4 @@ export default function HomePage() {
 
     </div>
   );
-        }
+}
