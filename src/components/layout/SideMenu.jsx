@@ -12,6 +12,7 @@ import {
   Star,
   Settings,
   HelpCircle,
+  User, 
   LogOut,
   Crown,
 } from 'lucide-react';
@@ -120,7 +121,7 @@ export default function SideMenu({ open, onClose }) {
     { to: '/wallet', label: 'Wallet', icon: Wallet },
     { to: '/messages', label: 'Messages', icon: MessageCircle, count: unreadMessages },
     { to: '/notifications', label: 'Notifications', icon: Bell, count: unreadNotifications },
-    { to: '/tasks/saved', label: 'Saved', icon: Bookmark },
+    
     { to: '/profile', label: 'Reviews', icon: Star },
   ];
 
@@ -164,7 +165,10 @@ export default function SideMenu({ open, onClose }) {
             ))}
 
             <div className="py-2"><hr className="border-gray-100" /></div>
-
+            <Link to="/profile" onClick={onClose} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-brand-navy transition-colors">
+              <User size={19} strokeWidth={2} />
+              <span className="text-sm font-medium">Settings</span>
+            </Link>
             <Link to="/settings" onClick={onClose} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-brand-navy transition-colors">
               <Settings size={19} strokeWidth={2} />
               <span className="text-sm font-medium">Settings</span>
