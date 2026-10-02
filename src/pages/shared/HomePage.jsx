@@ -16,6 +16,8 @@ import {
   Keyboard,
   Brush,
   Plus,
+  ChartNoAxesCombined,
+  Headset,
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -47,10 +49,9 @@ const CATEGORY_ICONS = {
   'video-editing': Video,
   'social-media': Megaphone,
   'typing-data-entry': Keyboard,
-  // FIX: lucide-react has no "Broom" icon (that import was silently breaking
-  // this component - React throws "Element type is invalid" when a
-  // component resolves to `undefined`). Brush is the closest real icon.
   cleaning: Brush,
+  'data-analytics': ChartNoAxesCombined,
+  'virtual-assistant': Headset,
   other: Plus,
 };
 
@@ -132,10 +133,14 @@ export default function HomePage() {
     mode === 'client' ? `/tasks/create?category=${categoryId}` : `/tasks?category=${categoryId}`;
 
 
+  const sortedCategories = [
+  ...categories.filter((category) => category.slug !== 'other').slice(0, 7),
+  ...categories.filter((category) => category.slug === 'other'),
+];
   /* -------------------------------------------------------
      RENDER
   ------------------------------------------------------- */
-
+ 
   return (
     <div className="space-y-6">
 
@@ -259,7 +264,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-4 gap-x-3 gap-y-5">
 
-          {categories.slice(0, 8).map((category) => {
+          {sortedCategories.slice(0, 8).map((category) => {
 
             const Icon =
               CATEGORY_ICONS[category.slug] || Plus;
