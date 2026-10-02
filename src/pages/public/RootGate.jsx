@@ -8,41 +8,45 @@ import HomePage from '../shared/HomePage.jsx';
 import LandingPage from './LandingPage.jsx';
 
 export default function RootGate() {
-const { user, loading } = useAuth();
+  const { user, loading } = useAuth();
 
-if (loading) {
-return (
-<div className="flex min-h-screen items-center justify-center">
-<Spinner size={80} />
-</div>
-);
-}
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner size={80} />
+      </div>
+    );
+  }
 
-if (!user) {
-return (
-<PublicLayout>
-<LandingPage />
-</PublicLayout>
-);
-}
+  if (!user) {
+    return (
+      <PublicLayout>
+        <LandingPage />
+      </PublicLayout>
+    );
+  }
 
-if (!user.emailVerified) {
-return (
-<Navigate
-to="/verify-email"
-state={{ email: user.email }}
-replace
-/>
-);
-}
+  if (!user.emailVerified) {
+    return (
+      <Navigate
+        to="/verify-email"
+        state={{ email: user.email }}
+        replace
+      />
+    );
+  }
 
-if (user.role === 'admin') {
-return <Navigate to="/admin" replace />;
-}
+  // FIX: role is stored as 'ADMIN' (uppercase) on the backend - see
+  // server/src/models/User.js (`role: { enum: ['USER', 'ADMIN'] }`). The
+  // previous lowercase check never matched, so admins always fell through
+  // to the regular HomePage.
+  if (user.role === 'ADMIN') {
+    return <Navigate to="/admin" replace />;
+  }
 
-return (
-<AppLayout>
-<HomePage />
-</AppLayout>
-);
+  return (
+    <AppLayout>
+      <HomePage />
+    </AppLayout>
+  );
 }
