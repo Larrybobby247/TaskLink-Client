@@ -54,7 +54,7 @@ const TRUST = [
 ];
 
 const AUDIENCES = [
-  { icon: GraduationCap, title: 'Students', text: 'Earn between classes with typing, tutoring, deliveries and design work, or get quick help with your own tasks.' },
+  { icon: GraduationCap, title: 'Students', text: 'Earn between classes with typing, tutoring, data entry and design work, or get quick help with your own tasks.' },
   { icon: Briefcase, title: 'Freelancers', text: 'Find steady small jobs, build a portfolio and grow a reputation that follows you.' },
   { icon: Store, title: 'Small businesses', text: 'Get flyers, social posts, photos and errands handled without hiring full time.' },
   { icon: User, title: 'Individuals', text: 'From cleaning a room to building a website, find someone reliable close to you.' },
