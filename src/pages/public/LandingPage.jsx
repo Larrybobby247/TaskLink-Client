@@ -15,7 +15,7 @@ import { timeUntil } from '../../utils/time.js';
 const PHONE_TASKS = [
   { title: 'Need a flyer designed', price: '₦1,500', tag: 'Design', due: 'Due today' },
   { title: 'Research 20 Nigerian tech startups', price: '₦5,000', tag: 'Virtual Assistance', due: '2 days' },
-  { title: 'Make me a CV', price: '₦3,000', tag: 'CV/Resume', due: '12 hours' },
+  { title: 'Make me a CV', price: '₦3,000', tag: 'CV', due: '12 hours' },
   { title: 'Build a simple website', price: '₦30,000', tag: 'Websites', due: '2 days' },
 ];
 
@@ -42,8 +42,8 @@ const CATEGORIES = [
 const EXAMPLE_TASKS = [
   { category: 'Design', title: 'Need a flyer designed today', meta: 'Online • 6 hours', price: '₦1,500' },
   { category: 'Writing', title: 'Need someone to type an assignment', meta: '24 hours', price: '₦3,000' },
-  { category: 'Delivery', title: 'Delivery across campus', meta: '3 hours', price: '₦1,000' },
-  { category: 'Photography', title: 'Looking for a photographer', meta: '2 hours', price: '₦10,000' },
+  { category: 'Video Editing', title: 'I need someone to edit my YouTube video', meta: '12 hours', price: '₦7,000' },
+  { category: 'Social Media', title: 'Create 5 Instagram posts for my small business', meta: '3 days', price: '₦10,000' },
 ];
 
 const TRUST = [
