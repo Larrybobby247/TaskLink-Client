@@ -37,7 +37,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="card divide-y divide-gray-100">
-        <Link to="/settings" className="flex items-center justify-between p-4 text-sm">Edit profile <span>›</span></Link>
+        <Link to="/settings" className="flex items-center justify-between p-4 text-sm">Edit settings <span>›</span></Link>
         <Link to="/wallet" className="flex items-center justify-between p-4 text-sm">Wallet <span>›</span></Link>
         <Link to={`/reviews/${user?._id}`} className="flex items-center justify-between p-4 text-sm">
           <span className="flex items-center gap-2"><Star size={16} /> Reviews</span> <span>›</span>
