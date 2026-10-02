@@ -1,5 +1,5 @@
 import React from 'react';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/126895-removebg-preview.png';
 
 export default function Spinner({ size = 120, className = '', animation = 'orbit' }) {
   const animationClasses = {
