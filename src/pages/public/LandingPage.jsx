@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Pencil, Users, CreditCard, Check, Clock, Star, ShieldCheck, BadgeCheck, Activity, Palette, FileText,
   Monitor, Truck, BookOpen, Camera, Wrench, Sparkles, Share2, CalendarDays, GraduationCap, Briefcase,
-  Store, User, Circle, Headset, ChartNoAxesCombined, 
+  Store, User, CheckCircle2, Headset, ChartNoAxesCombined, 
 } from 'lucide-react';
 import Reveal from '../../components/public/Reveal.jsx';
 import CtaBanner from '../../components/public/CtaBanner.jsx';
