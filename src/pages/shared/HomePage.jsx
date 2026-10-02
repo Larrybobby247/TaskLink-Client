@@ -50,8 +50,8 @@ const CATEGORY_ICONS = {
   'social-media': Megaphone,
   'typing-data-entry': Keyboard,
   cleaning: Brush,
-  'data-analytics': ChartNoAxesCombined,
-  'virtual-assistant': Headset,
+  'data-analysis': ChartNoAxesCombined,
+  'virtual-assistance': Headset,
   other: Plus,
 };
 
