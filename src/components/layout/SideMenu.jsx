@@ -167,7 +167,7 @@ export default function SideMenu({ open, onClose }) {
             <div className="py-2"><hr className="border-gray-100" /></div>
             <Link to="/profile" onClick={onClose} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-brand-navy transition-colors">
               <User size={19} strokeWidth={2} />
-              <span className="text-sm font-medium">Settings</span>
+              <span className="text-sm font-medium">Profile</span>
             </Link>
             <Link to="/settings" onClick={onClose} className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-brand-navy transition-colors">
               <Settings size={19} strokeWidth={2} />
