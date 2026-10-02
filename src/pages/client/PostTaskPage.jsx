@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { categoriesApi, tasksApi } from '../../api/tasks.js';
 import { nairaToKobo } from '../../utils/money.js';
 
 export default function PostTaskPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
-    title: '', category: '', description: '', budgetType: 'FIXED', budget: '', location: '',
+    title: '', category: searchParams.get('category') || '', description: '', budgetType: 'FIXED', budget: '', location: '',
     isRemote: true, deadline: '', additionalInstructions: '',
   });
   const [error, setError] = useState('');
