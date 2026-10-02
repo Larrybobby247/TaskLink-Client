@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Pencil, Users, CreditCard, Check, Clock, Star, ShieldCheck, BadgeCheck, Activity, Palette, FileText,
   Monitor, Truck, BookOpen, Camera, Wrench, Sparkles, Share2, CalendarDays, GraduationCap, Briefcase,
-  Store, User, CheckCircle2,
+  Store, User, Check, Circle, Headset, ChartNoAxesCombined, 
 } from 'lucide-react';
 import Reveal from '../../components/public/Reveal.jsx';
 import CtaBanner from '../../components/public/CtaBanner.jsx';
@@ -14,8 +14,8 @@ import { timeUntil } from '../../utils/time.js';
 
 const PHONE_TASKS = [
   { title: 'Need a flyer designed', price: '₦1,500', tag: 'Design', due: 'Due today' },
-  { title: 'Delivery across campus', price: '₦1,000', tag: 'Delivery', due: '3 hours' },
-  { title: 'Looking for a photographer', price: '₦10,000', tag: 'Photography', due: '2 hours' },
+  { title: 'Research 20 Nigerian tech startups', price: '₦5,000', tag: 'Virtual Assistance', due: '2 days' },
+  { title: 'Make me a CV', price: '₦3,000', tag: 'CV/Resume', due: '12 hours' },
   { title: 'Build a simple website', price: '₦30,000', tag: 'Websites', due: '2 days' },
 ];
 
@@ -32,13 +32,11 @@ const CATEGORIES = [
   { icon: Palette, label: 'Design' },
   { icon: FileText, label: 'Writing' },
   { icon: Monitor, label: 'Websites' },
-  { icon: Truck, label: 'Delivery' },
+  { icon: Truck, label: 'CV/Resume' },
   { icon: BookOpen, label: 'Tutoring' },
-  { icon: Camera, label: 'Photography' },
-  { icon: Wrench, label: 'Repairs' },
-  { icon: Sparkles, label: 'Cleaning' },
+  { icon: ChartNoAxesCombined, label: 'Data Analysis' },
+  { icon: Headset, label: 'Virtual Assistance' },
   { icon: Share2, label: 'Social Media' },
-  { icon: CalendarDays, label: 'Event Help' },
 ];
 
 const EXAMPLE_TASKS = [
