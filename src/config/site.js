@@ -4,10 +4,10 @@
 export const SITE = {
   name: 'TaskLink',
   tagline: 'Need something done? Find someone nearby.',
-  supportEmail: 'support@tasklink.ng', // <- replace with your real support inbox
-  supportPhone: '+234 800 000 0000', // <- replace with your real support line
-  supportWhatsApp: '2348000000000', // <- digits only, no + or spaces (used to build a wa.me link)
+  supportEmail: 'support@tasklink.com.ng', // <- replace with your real support inbox
+  supportPhone: '+234 902 5504 256', // <- replace with your real support line
+  supportWhatsApp: '2349025504256', // <- digits only, no + or spaces (used to build a wa.me link)
   legalEntity: 'TaskLink',
   country: 'Nigeria',
-  legalUpdated: 'September 2026',
+  legalUpdated: 'October 2026',
 };
