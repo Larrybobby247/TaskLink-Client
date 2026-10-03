@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://tasklink-58mu.onrender.com/api',
+  baseURL: 'https://api.tasklink.com.ng/api',
   withCredentials: true, // sends the HTTP-only auth cookie
 });
 
