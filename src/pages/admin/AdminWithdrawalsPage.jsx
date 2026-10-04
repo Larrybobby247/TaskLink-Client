@@ -7,6 +7,7 @@ import StatusBadge from '../../components/ui/StatusBadge.jsx';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import TaskListSkeleton from '../../components/task/TaskListSkeleton.jsx';
 import { formatNaira } from '../../utils/money.js';
+import { Eye, EyeOff, Copy } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { value: 'PENDING', label: 'Pending' },
@@ -20,6 +21,7 @@ export default function AdminWithdrawalsPage() {
   const [status, setStatus] = useState('PENDING');
   const [state, setState] = useState({ loading: true, items: [], page: 1, totalPages: 1 });
   const [confirmAction, setConfirmAction] = useState(null); // { type: 'approve'|'reject', withdrawal }
+  const [visibleAccounts, setVisibleAccounts] = useState({});
 
   const load = (page = 1) => {
     setState((s) => ({ ...s, loading: true }));
@@ -53,9 +55,11 @@ export default function AdminWithdrawalsPage() {
               <div className="min-w-0">
                 <p className="font-semibold">{w.user?.fullName} <span className="text-xs text-gray-400 font-normal">({w.user?.email})</span></p>
                 <div className="mt-2 rounded-lg bg-gray-50 border border-gray-200 p-3">
-  <p className="text-xs text-gray-500 mb-1">Bank account details</p>
+  <p className="text-xs text-gray-500 mb-2">
+    Bank account details
+  </p>
 
-  <div className="space-y-1">
+  <div className="space-y-2">
     <div className="flex justify-between gap-2">
       <span className="text-xs text-gray-500">Bank</span>
       <span className="text-sm font-medium text-gray-800">
@@ -70,20 +74,45 @@ export default function AdminWithdrawalsPage() {
       </span>
     </div>
 
-    <div className="flex justify-between items-center gap-2">
+    <div className="flex items-center justify-between gap-2">
       <span className="text-xs text-gray-500">Account number</span>
+
       <div className="flex items-center gap-2">
         <span className="text-sm font-bold text-brand-navy tracking-wider">
-          {w.accountNumber || `****${w.accountNumberLast4 || ''}`}
+          {visibleAccounts[w._id]
+            ? w.accountNumber || 'N/A'
+            : `****${w.accountNumberLast4 || ''}`}
         </span>
+
         {w.accountNumber && (
-          <button
-            type="button"
-            onClick={() => navigator.clipboard.writeText(w.accountNumber)}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            Copy
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                setVisibleAccounts((prev) => ({
+                  ...prev,
+                  [w._id]: !prev[w._id],
+                }))
+              }
+              className="text-gray-500 hover:text-brand-navy"
+              title={visibleAccounts[w._id] ? 'Hide account number' : 'Show account number'}
+            >
+              {visibleAccounts[w._id] ? (
+                <EyeOff size={16} />
+              ) : (
+                <Eye size={16} />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(w.accountNumber)}
+              className="text-gray-500 hover:text-brand-navy"
+              title="Copy account number"
+            >
+              <Copy size={15} />
+            </button>
+          </>
         )}
       </div>
     </div>
