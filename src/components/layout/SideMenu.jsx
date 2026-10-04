@@ -132,7 +132,7 @@ export default function SideMenu({ open, onClose }) {
       <aside className="absolute top-0 right-0 h-[100dvh] w-[320px] max-w-[90vw] bg-white shadow-2xl flex flex-col overflow-hidden pb-20">
         <div className="shrink-0 px-5 pt-5 pb-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 min-w-0">
+            <Link to= "/settings" onclick={onClose} className="flex items-center gap-3 min-w-0">
               {user?.profileImage?.url ? (
                 <img src={user.profileImage.url} className="w-11 h-11 rounded-full object-cover shrink-0" alt="" />
               ) : (
@@ -144,7 +144,7 @@ export default function SideMenu({ open, onClose }) {
                 <p className="font-semibold text-brand-navy truncate">{user?.fullName || 'User'}</p>
                 <p className="text-xs text-gray-400 truncate">@{user?.username || 'user'}</p>
               </div>
-            </div>
+            </Link>
             <button type="button" onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 text-gray-400 shrink-0" aria-label="Close menu">
               <X size={20} />
             </button>
