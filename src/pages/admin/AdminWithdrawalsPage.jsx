@@ -52,9 +52,43 @@ export default function AdminWithdrawalsPage() {
             <div key={w._id} className="card p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
               <div className="min-w-0">
                 <p className="font-semibold">{w.user?.fullName} <span className="text-xs text-gray-400 font-normal">({w.user?.email})</span></p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {w.bankName} · {w.accountName} · ****{w.accountNumberLast4}
-                </p>
+                <div className="mt-2 rounded-lg bg-gray-50 border border-gray-200 p-3">
+  <p className="text-xs text-gray-500 mb-1">Bank account details</p>
+
+  <div className="space-y-1">
+    <div className="flex justify-between gap-2">
+      <span className="text-xs text-gray-500">Bank</span>
+      <span className="text-sm font-medium text-gray-800">
+        {w.bankName || 'N/A'}
+      </span>
+    </div>
+
+    <div className="flex justify-between gap-2">
+      <span className="text-xs text-gray-500">Account name</span>
+      <span className="text-sm font-medium text-gray-800 text-right">
+        {w.accountName || 'N/A'}
+      </span>
+    </div>
+
+    <div className="flex justify-between items-center gap-2">
+      <span className="text-xs text-gray-500">Account number</span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-bold text-brand-navy tracking-wider">
+          {w.accountNumber || `****${w.accountNumberLast4 || ''}`}
+        </span>
+        {w.accountNumber && (
+          <button
+            type="button"
+            onClick={() => navigator.clipboard.writeText(w.accountNumber)}
+            className="text-xs text-blue-600 hover:underline"
+          >
+            Copy
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
                 <p className="text-xs text-gray-300 mt-0.5">Ref: {w.reference} · Requested {new Date(w.requestedAt).toLocaleString()}</p>
               </div>
               <div className="flex items-center gap-4 shrink-0">
