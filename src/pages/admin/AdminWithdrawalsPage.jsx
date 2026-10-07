@@ -74,48 +74,46 @@ export default function AdminWithdrawalsPage() {
       </span>
     </div>
 
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-xs text-gray-500">Account number</span>
+<div className="flex items-center justify-between gap-2">
+  <span className="text-xs text-gray-500">Account number</span>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-bold text-brand-navy tracking-wider">
-          {visibleAccounts[w._id]
-            ? w.accountNumber || 'N/A'
-            : `****${w.accountNumberLast4 || ''}`}
-        </span>
+  <div className="flex items-center gap-2">
+    <span className="text-sm font-bold text-brand-navy tracking-wider">
+      {visibleAccounts[w._id] && w.accountNumber
+        ? w.accountNumber
+        : w.accountNumberLast4
+          ? `****${w.accountNumberLast4}`
+          : 'N/A'}
+    </span>
+
+    {(w.accountNumber || w.accountNumberLast4) && (
+      <>
+        <button
+          type="button"
+          onClick={() =>
+            setVisibleAccounts((prev) => ({ ...prev, [w._id]: !prev[w._id] }))
+          }
+          className="text-gray-500 hover:text-brand-navy p-1"
+          title={visibleAccounts[w._id] ? 'Hide' : 'Show'}
+        >
+          {visibleAccounts[w._id] ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
 
         {w.accountNumber && (
-          <>
-            <button
-              type="button"
-              onClick={() =>
-                setVisibleAccounts((prev) => ({
-                  ...prev,
-                  [w._id]: !prev[w._id],
-                }))
-              }
-              className="text-gray-500 hover:text-brand-navy"
-              title={visibleAccounts[w._id] ? 'Hide account number' : 'Show account number'}
-            >
-              {visibleAccounts[w._id] ? (
-                <EyeOff size={16} />
-              ) : (
-                <Eye size={16} />
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(w.accountNumber)}
-              className="text-gray-500 hover:text-brand-navy"
-              title="Copy account number"
-            >
-              <Copy size={15} />
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => navigator.clipboard.writeText(w.accountNumber)}
+            className="text-gray-500 hover:text-brand-navy p-1"
+            title="Copy"
+          >
+            <Copy size={15} />
+          </button>
         )}
-      </div>
-    </div>
+      </>
+    )}
+  </div>
+</div>
+
   </div>
 </div>
                 <p className="text-xs text-gray-300 mt-0.5">Ref: {w.reference} · Requested {new Date(w.requestedAt).toLocaleString()}</p>
