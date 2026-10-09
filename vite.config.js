@@ -9,6 +9,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 3_000_000,
+      },
       manifest: {
         name: 'TaskLink',
         short_name: 'TaskLink',
@@ -17,8 +23,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: './src/assets/126895-removebg-preview.png', sizes: '192x192', type: 'image/png' },
+          { src: './src/assets/126895-removebg-preview.png', sizes: '512x512', type: 'image/png' },
         ],
       },
     }),
