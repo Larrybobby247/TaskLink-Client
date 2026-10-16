@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import TopBar from './TopBar.jsx';
 import BottomNav from './BottomNav.jsx';
+import NotificationPermissionPrompt from '../shared/NotificationPermissionPrompt.jsx';
 
 // `children` lets RootGate render the shell around HomePage directly; every
 // other route keeps using it as a layout route via <Outlet />.
@@ -13,6 +14,7 @@ export default function AppLayout({ children }) {
         {children ?? <Outlet />}
       </main>
       <BottomNav />
+      <NotificationPermissionPrompt/>
     </div>
   );
 }
