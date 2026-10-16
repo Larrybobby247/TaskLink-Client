@@ -1,0 +1,107 @@
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Plus, Eye, Pause, Play, Trash2 } from 'lucide-react';
+import { gigsApi } from '../../api/gigs.js';
+import StatusBadge from '../../components/ui/StatusBadge.jsx';
+import EmptyState from '../../components/ui/EmptyState.jsx';
+import ConfirmModal from '../../components/ui/ConfirmModal.jsx';
+import TaskListSkeleton from '../../components/task/TaskListSkeleton.jsx';
+import { formatNaira } from '../../utils/money.js';
+
+const TABS = [null, 'PUBLISHED', 'DRAFT', 'PAUSED'];
+
+export default function MyGigsPage() {
+  const [tab, setTab] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [gigs, setGigs] = useState([]);
+  const [limit, setLimit] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const load = () => {
+    setLoading(true);
+    Promise.all([gigsApi.mine(tab), gigsApi.myLimit()])
+      .then(([gigsRes, limitRes]) => { setGigs(gigsRes.data.gigs); setLimit(limitRes.data); })
+      .finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, [tab]); // eslint-disable-line
+
+  const publish = async (id) => { await gigsApi.publish(id); load(); };
+  const pause = async (id) => { await gigsApi.pause(id); load(); };
+  const remove = async (id) => { await gigsApi.remove(id); load(); };
+
+  return (
+    <div className="space-y-4 pb-10">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-brand-navy">My Gigs</h1>
+          {limit && (
+            <p className="text-sm text-gray-400 mt-1">
+              {limit.published} / {limit.limit} published
+              {limit.remaining === 0 && <span className="text-orange-500 font-medium"> · limit reached</span>}
+            </p>
+          )}
+        </div>
+        <Link to="/worker/gigs/create" className="btn-primary text-sm flex items-center gap-1.5 py-2.5 px-4">
+          <Plus size={16} /> Create Gig
+        </Link>
+      </div>
+
+      {limit?.remaining === 0 && (
+        <div className="card p-4 bg-orange-50 border-orange-100 flex items-center justify-between gap-3">
+          <p className="text-sm text-orange-700">You've reached your plan's published gig limit.</p>
+          <Link to="/settings/pro" className="text-sm font-semibold text-brand-blue whitespace-nowrap">Upgrade to Pro</Link>
+        </div>
+      )}
+
+      <div className="flex gap-2 overflow-x-auto">
+        {TABS.map((t) => (
+          <button key={t || 'all'} onClick={() => setTab(t)} className={`chip whitespace-nowrap ${tab === t ? 'bg-brand-navy text-white' : 'bg-white border border-gray-200 text-gray-500'}`}>
+            {t || 'All'}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <TaskListSkeleton />
+      ) : gigs.length ? (
+        <div className="space-y-3">
+          {gigs.map((gig) => (
+            <div key={gig._id} className="card p-4 flex items-center gap-3">
+              <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+                {gig.coverImage?.url ? <img src={gig.coverImage.url} className="w-full h-full object-cover" alt="" /> : null}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-brand-navy truncate">{gig.title}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{formatNaira(gig.startingPriceKobo)} · {gig.deliveryDays}d delivery</p>
+                <StatusBadge status={gig.status} />
+              </div>
+              <div className="flex flex-col gap-1.5 items-end shrink-0">
+                <Link to={`/worker/gigs/${gig._id}/edit`} className="text-xs font-medium text-brand-blue">Edit</Link>
+                {gig.status === 'PUBLISHED' ? (
+                  <button onClick={() => pause(gig._id)} className="text-xs font-medium text-gray-500 flex items-center gap-1"><Pause size={12} /> Pause</button>
+                ) : (
+                  <button onClick={() => publish(gig._id)} className="text-xs font-medium text-green-600 flex items-center gap-1"><Play size={12} /> Publish</button>
+                )}
+                <Link to={`/gigs/${gig._id}`} className="text-xs font-medium text-gray-400 flex items-center gap-1"><Eye size={12} /> Preview</Link>
+                <button onClick={() => setConfirmDelete(gig)} className="text-xs font-medium text-red-500 flex items-center gap-1"><Trash2 size={12} /> Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="No gigs yet" subtitle="Create your first gig to start getting discovered by clients." action={<Link to="/worker/gigs/create" className="btn-primary">Create Gig</Link>} />
+      )}
+
+      {confirmDelete && (
+        <ConfirmModal
+          title="Delete this gig?"
+          description={`"${confirmDelete.title}" will be permanently removed. This can't be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={() => remove(confirmDelete._id)}
+          onClose={() => setConfirmDelete(null)}
+        />
+      )}
+    </div>
+  );
+}

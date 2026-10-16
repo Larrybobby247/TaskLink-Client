@@ -21,6 +21,11 @@ export default function AdminSettingsPage() {
         featuredTaskDurationDays: s.featuredTaskDurationDays,
         maxAttachmentSizeMb: s.maxAttachmentSizeMb,
         maxRevisions: s.maxRevisions,
+        // New (gig marketplace feature, spec §5)
+        freeGigLimit: s.freeGigLimit ?? 3,
+        proGigLimit: s.proGigLimit ?? 15,
+        maxGigImages: s.maxGigImages ?? 5,
+        maxGigImageSizeMb: s.maxGigImageSizeMb ?? 5,        
       });
     });
   }, []);
@@ -44,6 +49,10 @@ export default function AdminSettingsPage() {
         featuredTaskDurationDays: Number(form.featuredTaskDurationDays),
         maxAttachmentSizeMb: Number(form.maxAttachmentSizeMb),
         maxRevisions: Number(form.maxRevisions),
+        freeGigLimit: Number(form.freeGigLimit),
+        proGigLimit: Number(form.proGigLimit),
+        maxGigImages: Number(form.maxGigImages),
+        maxGigImageSizeMb: Number(form.maxGigImageSizeMb),        
       });
       setSaved(true);
     } catch (err) {
@@ -86,6 +95,14 @@ export default function AdminSettingsPage() {
         <Field label="Task boost duration" k="featuredTaskDurationDays" suffix="days" />
         <Field label="Max attachment size" k="maxAttachmentSizeMb" suffix="MB" />
         <Field label="Max revisions per order" k="maxRevisions" />
+        
+        <hr className="border-gray-100" />
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Gig marketplace</p>
+        <Field label="Free plan published gig limit" k="freeGigLimit" />
+        <Field label="Pro plan published gig limit" k="proGigLimit" />
+        <Field label="Max images per gig" k="maxGigImages" />
+        <Field label="Max gig image size" k="maxGigImageSizeMb" suffix="MB" />
+
         <button className="btn-primary w-full" disabled={saving}>{saving ? 'Saving...' : 'Save settings'}</button>
       </form>
     </div>

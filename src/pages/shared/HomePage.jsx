@@ -82,10 +82,9 @@ export default function HomePage() {
     Promise.all([
       categoriesApi.list(),
 
-      tasksApi.search({
-        sort: mode === 'worker' ? 'newest' : 'newest',
-        limit: 4,
-      }),
+      // New: in client mode we fetch Featured Gigs instead of the task
+      // feed (spec §2.2) - worker mode's Quick Tasks feed is unchanged.
+      mode === 'client' ? gigsApi.featured(6) : tasksApi.search({ sort: 'newest', limit: 4 }),
 
       mode === 'worker'
         ? walletApi.get()
@@ -137,6 +136,11 @@ export default function HomePage() {
   ...categories.filter((category) => category.slug !== 'other').slice(0, 7),
   ...categories.filter((category) => category.slug === 'other'),
 ];
+
+const submitSearch = (e) => {
+    e.preventDefault();
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}&type=workers`);
+  };
   /* -------------------------------------------------------
      RENDER
   ------------------------------------------------------- */
@@ -235,22 +239,37 @@ export default function HomePage() {
         </div>
       )}
 
-
       {/* ---------------------------------------------------
           SEARCH
+          New (gig marketplace feature, spec §2.1): client mode gets a real
+          worker search bar that submits to /search?q=...; worker mode keeps
+          the existing task search shortcut unchanged.
       --------------------------------------------------- */}
 
-      <Link
-        to="/tasks"
-        className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 text-gray-400 shadow-sm"
-      >
-        <Search size={18} />
-
-        <span className="text-sm">
-          Search for a task (e.g. design, delivery, tutoring...)
-        </span>
-      </Link>
-
+      {mode === 'client' ? (
+        <form
+          onSubmit={submitSearch}
+          className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm"
+        >
+          <Search size={18} className="text-gray-400 shrink-0" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search workers, usernames, skills, or services..."
+            className="flex-1 outline-none text-sm text-gray-700 placeholder:text-gray-400 min-w-0"
+          />
+        </form>
+      ) : (
+        <Link
+          to="/tasks"
+          className="flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 text-gray-400 shadow-sm"
+        >
+          <Search size={18} />
+          <span className="text-sm">
+            Search for a task (e.g. design, websites, tutoring...)
+          </span>
+        </Link>
+      )}
 
       {/* ---------------------------------------------------
           CATEGORIES
@@ -310,57 +329,78 @@ export default function HomePage() {
 
 
       {/* ---------------------------------------------------
-          QUICK TASKS
+          FEATURED GIGS (client mode) / QUICK TASKS (worker mode)
+          New (gig marketplace feature, spec §2.2): Quick Tasks is replaced
+          with Featured Gigs for client mode specifically. Worker mode's
+          Quick Tasks feed below is exactly what was there before.
       --------------------------------------------------- */}
 
-      <div>
+      {mode === 'client' ? (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-brand-navy">✨ Featured Gigs</h3>
+            <Link to="/search?type=gigs" className="text-sm text-brand-blue font-medium">Explore Gigs</Link>
+          </div>
 
-        <div className="flex items-center justify-between mb-3">
-
-          <h3 className="font-semibold text-brand-navy">
-            ⚡ Quick Tasks
-          </h3>
-
-          <Link
-            to="/tasks"
-            className="text-sm text-brand-blue font-medium"
-          >
-            See all
-          </Link>
-
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => <div key={i} className="aspect-[4/5] rounded-2xl bg-gray-100 animate-pulse" />)}
+            </div>
+          ) : gigs.length ? (
+            <div className="grid grid-cols-2 gap-3">
+              {gigs.map((gig) => <GigCard key={gig._id} gig={gig} />)}
+            </div>
+          ) : (
+            <EmptyState title="No gigs yet" subtitle="Check back soon, or browse categories to find a worker." />
+          )}
         </div>
+      ) : (
+        <div>
 
+          <div className="flex items-center justify-between mb-3">
 
-        {/* Loading */}
-        {loading ? (
+            <h3 className="font-semibold text-brand-navy">
+              ⚡ Quick Tasks
+            </h3>
 
-          <TaskListSkeleton />
-
-        ) : tasks.length ? (
-
-          /* Tasks */
-          <div className="space-y-3">
-
-            {tasks.map((task) => (
-              <TaskCard
-                key={task._id}
-                task={task}
-              />
-            ))}
+            <Link
+              to="/tasks"
+              className="text-sm text-brand-blue font-medium"
+            >
+              See all
+            </Link>
 
           </div>
 
-        ) : (
 
-          /* Empty state */
-          <EmptyState
-            title="No tasks yet"
-            subtitle="Check back soon, or post the first one!"
-          />
+          {loading ? (
 
-        )}
+            <TaskListSkeleton />
 
-      </div>
+          ) : tasks.length ? (
+
+            <div className="space-y-3">
+
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task._id}
+                  task={task}
+                />
+              ))}
+
+            </div>
+
+          ) : (
+
+            <EmptyState
+              title="No tasks yet"
+              subtitle="Check back soon, or post the first one!"
+            />
+
+          )}
+
+        </div>
+      )}
 
     </div>
   );

@@ -23,6 +23,11 @@ export const adminApi = {
   pauseTask: (id) => api.post(`/admin/tasks/${id}/pause`).then((r) => r.data),
   deleteTask: (id) => api.delete(`/admin/tasks/${id}`).then((r) => r.data),
 
+  // --- Gigs (new - gig marketplace feature, spec §14) ---
+  listGigs: (params) => api.get('/admin/gigs', { params }).then((r) => r.data),
+  pauseGig: (id) => api.post(`/admin/gigs/${id}/pause`).then((r) => r.data),
+  deleteGig: (id) => api.delete(`/admin/gigs/${id}`).then((r) => r.data),
+  
   // --- Payments / Transactions ---
   listPayments: (params) => api.get('/admin/payments', { params }).then((r) => r.data),
 

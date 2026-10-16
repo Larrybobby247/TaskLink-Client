@@ -15,6 +15,11 @@ export const usersApi = {
 export const workersApi = {
   search: (params) => api.get('/workers', { params }).then((r) => r.data),
   get: (id) => api.get(`/workers/${id}`).then((r) => r.data),
+  // New (gig marketplace feature, spec §13)
+  saved: (params) => api.get('/workers/saved', { params }).then((r) => r.data),
+  save: (id) => api.post(`/workers/${id}/save`).then((r) => r.data),
+  unsave: (id) => api.delete(`/workers/${id}/save`).then((r) => r.data),
+  hire: (id, payload) => api.post(`/workers/${id}/hire`, payload).then((r) => r.data),
 };
 
 export const notificationsApi = {
@@ -29,6 +34,10 @@ export const messagesApi = {
   messages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}/messages`, { params }).then((r) => r.data),
   send: (conversationId, payload) => api.post(`/messages/conversations/${conversationId}/messages`, payload).then((r) => r.data),
   markRead: (conversationId) => api.post(`/messages/conversations/${conversationId}/read`).then((r) => r.data),
+  // New: starts a conversation tied to a gig instead of an application.
+  startConversationForGig: (gigId) => api.post('/messages/conversations', { gigId }).then((r) => r.data),
+  messages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}/messages`, { params }).then((r) => r.data),
+  send: (conversationId, payload) => api.post(`/messages/conversations/${conversationId}/messages`, payload).then((r) => r.data),
 };
 
 export const subscriptionsApi = {
