@@ -4,11 +4,14 @@ import { Star, Clock } from 'lucide-react';
 import { formatNaira } from '../../utils/money.js';
 
 export default function GigCard({ gig }) {
+  const description = gig.shortDescription || gig.description;
+  const rating = gig.worker?.rating;
+
   return (
     <Link to={`/gigs/${gig._id}`} className="card overflow-hidden hover:shadow-md transition-shadow flex flex-col">
       <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
         {gig.coverImage?.url ? (
-          <img src={gig.coverImage.url} alt={gig.title} className="w-full h-full object-cover" />
+          <img src={gig.coverImage.url} alt={gig.title} loading="lazy" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-3xl">🗂️</div>
         )}
@@ -24,15 +27,21 @@ export default function GigCard({ gig }) {
           <span className="text-xs text-gray-500 truncate">{gig.worker?.username ? `@${gig.worker.username}` : gig.worker?.fullName}</span>
         </div>
 
-        <p className="text-sm font-semibold text-brand-navy line-clamp-2 flex-1">{gig.title}</p>
+        {gig.category?.name && (
+          <span className="text-[10px] font-medium uppercase tracking-wide text-brand-blue mb-1 truncate">{gig.category.name}</span>
+        )}
+
+        <p className="text-sm font-semibold text-brand-navy line-clamp-2">{gig.title}</p>
+
+        {description && <p className="text-xs text-gray-500 line-clamp-2 mt-1 flex-1">{description}</p>}
 
         <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
           <span className="flex items-center gap-1">
             <Star size={12} className="text-yellow-500 fill-yellow-500" />
-            {gig.worker?.rating?.toFixed?.(1) || 'New'}
+            {typeof rating === 'number' && rating > 0 ? rating.toFixed(1) : 'New'}
             {gig.worker?.reviewCount ? ` (${gig.worker.reviewCount})` : ''}
           </span>
-          <span className="flex items-center gap-1"><Clock size={12} /> {gig.deliveryDays}d</span>
+          {gig.deliveryDays ? <span className="flex items-center gap-1"><Clock size={12} /> {gig.deliveryDays}d</span> : null}
         </div>
 
         <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
