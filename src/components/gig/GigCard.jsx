@@ -16,7 +16,6 @@ export default function GigCard({ gig }) {
           <div className="w-full h-full flex items-center justify-center text-3xl">🗂️</div>
         )}
       </div>
-
       <div className="p-3 flex-1 flex flex-col">
         <div className="flex items-center gap-2 mb-1.5">
           {gig.worker?.profileImage?.url ? (
