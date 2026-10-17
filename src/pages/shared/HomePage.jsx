@@ -18,6 +18,11 @@ import {
   Plus,
   BarChart,
   Headphones,
+  ClipboardList,
+  Briefcase,
+  Bookmark,
+  Wallet,
+  ArrowRight,
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -90,6 +95,7 @@ export default function HomePage() {
   const [balanceKobo, setBalanceKobo] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   /* -------------------------------------------------------
   FETCH DATA
@@ -162,7 +168,7 @@ export default function HomePage() {
     return () => {
       mounted = false;
     };
-  }, [mode]);
+  }, [mode, reloadKey]);
 
   /* -------------------------------------------------------
   CATEGORY NAVIGATION
@@ -171,8 +177,9 @@ export default function HomePage() {
   const categoryHref = (categoryId) => {
     const encodedId = encodeURIComponent(categoryId);
 
+    // Clients browse published gigs in a category; workers browse tasks.
     return mode === 'client'
-      ? `/tasks/create?category=${encodedId}`
+      ? `/search?type=gigs&category=${encodedId}`
       : `/tasks?category=${encodedId}`;
   };
 
@@ -239,40 +246,6 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* HERO */}
-
-      {mode === 'client' ? (
-        <section className="rounded-2xl bg-brand-navy p-6 text-white">
-          <h2 className="mb-1 text-lg font-bold">Need something done?</h2>
-
-          <p className="mb-4 text-sm text-white/70">
-            Post a task and connect with someone who can get it done.
-          </p>
-
-          <Link
-            to="/tasks/create"
-            className="inline-block rounded-xl bg-white px-5 py-3 font-semibold text-brand-navy"
-          >
-            Post a Task
-          </Link>
-        </section>
-      ) : (
-        <section className="rounded-2xl bg-brand-navy p-6 text-white">
-          <h2 className="mb-1 text-lg font-bold">Ready to earn today?</h2>
-
-          <p className="mb-4 text-sm text-white/70">
-            Browse tasks that match your skills.
-          </p>
-
-          <Link
-            to="/tasks"
-            className="inline-block rounded-xl bg-white px-5 py-3 font-semibold text-brand-navy"
-          >
-            Find Tasks
-          </Link>
-        </section>
-      )}
-
       {/* SEARCH */}
 
       {mode === 'client' ? (
@@ -311,6 +284,62 @@ export default function HomePage() {
             Search for a task (e.g. design, websites, tutoring...)
           </span>
         </Link>
+      )}
+
+      {/* HERO */}
+
+      {mode === 'client' ? (
+        <section className="rounded-2xl bg-brand-navy p-6 text-white">
+          <h2 className="mb-1 text-lg font-bold">Need something done?</h2>
+
+          <p className="mb-4 text-sm text-white/70">
+            Post a task and connect with someone who can get it done.
+          </p>
+
+          <Link
+            to="/tasks/create"
+            className="inline-block rounded-xl bg-white px-5 py-3 font-semibold text-brand-navy"
+          >
+            Post a Task
+          </Link>
+        </section>
+      ) : (
+        <section className="rounded-2xl bg-brand-navy p-6 text-white">
+          <h2 className="mb-1 text-lg font-bold">Ready to earn today?</h2>
+
+          <p className="mb-4 text-sm text-white/70">
+            Browse tasks that match your skills.
+          </p>
+
+          <Link
+            to="/tasks"
+            className="inline-block rounded-xl bg-white px-5 py-3 font-semibold text-brand-navy"
+          >
+            Find Tasks
+          </Link>
+        </section>
+      )}
+
+      {/* CLIENT: QUICK ACCESS */}
+
+      {mode === 'client' && (
+        <section className="grid grid-cols-4 gap-2" aria-label="Quick access">
+          {[
+            { to: '/client/tasks', label: 'My Tasks', icon: ClipboardList },
+            { to: '/client/orders', label: 'Active Jobs', icon: Briefcase },
+            { to: '/saved-workers', label: 'Saved', icon: Bookmark },
+            { to: '/wallet', label: 'Payments', icon: Wallet },
+          ].map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-gray-100 bg-white px-1 py-3 text-center shadow-sm"
+            >
+              <Icon size={20} className="text-brand-navy" />
+              <span className="text-[11px] font-medium text-gray-600">{label}</span>
+            </Link>
+          ))}
+        </section>
       )}
 
       {/* CATEGORIES */}
@@ -400,10 +429,34 @@ export default function HomePage() {
               title={loadError ? 'Unable to load gigs' : 'No gigs yet'}
               subtitle={
                 loadError
-                  ? 'Please refresh the page and try again.'
+                  ? 'Please check your connection and try again.'
                   : 'Check back soon, or explore categories to find a worker.'
               }
+              action={
+                loadError ? (
+                  <button
+                    type="button"
+                    onClick={() => setReloadKey((key) => key + 1)}
+                    className="btn-secondary text-sm"
+                  >
+                    Try again
+                  </button>
+                ) : (
+                  <Link to="/search?type=workers" className="btn-secondary text-sm">
+                    Find workers
+                  </Link>
+                )
+              }
             />
+          )}
+
+          {!loading && gigs.length > 0 && (
+            <Link
+              to="/search?type=gigs"
+              className="btn-secondary mt-4 flex w-full items-center justify-center gap-2 text-sm"
+            >
+              View All Gigs <ArrowRight size={16} />
+            </Link>
           )}
         </section>
       )}

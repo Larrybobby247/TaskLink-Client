@@ -95,6 +95,29 @@ export default function PublicProfilePage() {
     };
   }, [profileUser?._id]);
 
+  // Pre-fill the Save button so it reflects whether this worker is already saved.
+  useEffect(() => {
+    let cancelled = false;
+    const viewerId = currentUser?._id;
+
+    if (!profileUser?._id || !viewerId || String(profileUser._id) === String(viewerId)) {
+      return undefined;
+    }
+
+    workersApi
+      .saved({ limit: 50 })
+      .then((res) => {
+        if (cancelled) return;
+        const list = Array.isArray(res?.data) ? res.data : [];
+        setSaved(list.some((entry) => String(entry.worker?._id) === String(profileUser._id)));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profileUser?._id, currentUser?._id]);
+
   // Loading and error states.
   if (error) {
     return <ErrorState message={error} />;
@@ -146,6 +169,16 @@ export default function PublicProfilePage() {
 
   return (
     <div className="space-y-5 pb-10">
+      {/* Shown only to the owner: this page is exactly what clients see. */}
+      {isOwnProfile && (
+        <div className="card p-4 bg-blue-50 border-blue-100 flex items-center justify-between gap-3">
+          <p className="text-sm text-blue-700">This is how clients see your public profile.</p>
+          <Link to="/settings/worker-profile" className="text-sm font-semibold text-brand-blue whitespace-nowrap">
+            Edit profile
+          </Link>
+        </div>
+      )}
+
       {/* Profile overview */}
       <div className="card p-6 text-center">
         {profileUser.profileImage?.url ? (
