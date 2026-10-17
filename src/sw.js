@@ -1,8 +1,35 @@
-import { precacheAndRoute } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { registerRoute, NavigationRoute } from 'workbox-routing';
+import { NetworkFirst } from 'workbox-strategies';
 
-// Injected at build time by vite-plugin-pwa (injectManifest strategy) with
-// the list of app assets to precache for offline support.
-precacheAndRoute(self.__WB_MANIFEST);
+/*
+ * FIX (stale homepage after reload):
+ * Before, this worker never called skipWaiting()/clientsClaim(), so after a
+ * deploy the NEW worker sat in "waiting" and the OLD worker kept serving the
+ * OLD precached index.html for "/" (workbox maps "/" -> index.html). Other
+ * URLs like /tasks were not precached, so they hit the network and loaded
+ * the new build. That is why only a reload on the homepage showed the old
+ * "Quick Tasks" UI.
+ */
+self.skipWaiting();
+clientsClaim();
+cleanupOutdatedCaches();
+
+// Precache hashed JS/CSS/images only. index.html is deliberately NOT precached
+// so "/" can never be served from an old build.
+const manifest = (self.__WB_MANIFEST || []).filter(
+  (entry) => (typeof entry === 'string' ? entry : entry.url) !== 'index.html'
+);
+precacheAndRoute(manifest, { directoryIndex: null, cleanURLs: false });
+
+// Page navigations always try the network first (fresh index.html after every
+// deploy) and only fall back to a cached copy when offline.
+registerRoute(
+  new NavigationRoute(new NetworkFirst({ cacheName: 'tasklink-pages' }), {
+    denylist: [/^\/api\//],
+  })
+);
 
 self.addEventListener('push', (event) => {
   let data = { title: 'TaskLink', body: 'You have a new notification' };

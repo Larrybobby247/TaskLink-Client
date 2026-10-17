@@ -32,6 +32,9 @@ import ReviewsPage from './pages/shared/ReviewsPage.jsx';
 import PaymentCallbackPage from './pages/shared/PaymentCallbackPage.jsx';
 import HelpPage from './pages/shared/HelpPage.jsx';
 import PublicProfilePage from './pages/shared/PublicProfilePage.jsx';
+import SearchPage from './pages/shared/SearchPage.jsx';
+import GigDetailPage from './pages/shared/GigDetailPage.jsx';
+import SavedWorkersPage from './pages/shared/SavedWorkersPage.jsx';
 
 import PostTaskPage from './pages/client/PostTaskPage.jsx';
 import MyTasksPage from './pages/client/MyTasksPage.jsx';
@@ -41,12 +44,15 @@ import ActiveOrdersPage from './pages/client/ActiveOrdersPage.jsx';
 import MyApplicationsPage from './pages/worker/MyApplicationsPage.jsx';
 import MyJobsPage from './pages/worker/MyJobsPage.jsx';
 import WorkerProfileSettingsPage from './pages/worker/WorkerProfileSettingsPage.jsx';
+import MyGigsPage from './pages/worker/MyGigsPage.jsx';
+import GigFormPage from './pages/worker/GigFormPage.jsx';
 
 import AdminLayout from './components/layout/AdminLayout.jsx';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx';
 import AdminUsersPage from './pages/admin/AdminUsersPage.jsx';
 import AdminUserDetailPage from './pages/admin/AdminUserDetailPage.jsx';
 import AdminTasksPage from './pages/admin/AdminTasksPage.jsx';
+import AdminGigsPage from './pages/admin/AdminGigsPage.jsx';
 import AdminTransactionsPage from './pages/admin/AdminTransactionsPage.jsx';
 import AdminWithdrawalsPage from './pages/admin/AdminWithdrawalsPage.jsx';
 import AdminDisputesPage from './pages/admin/AdminDisputesPage.jsx';
@@ -113,6 +119,16 @@ export default function App() {
             element={<OrderDetailPage />}
           />
 
+          {/* Gig marketplace: discovery */}
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/gigs/:id" element={<GigDetailPage />} />
+          <Route path="/saved-workers" element={<SavedWorkersPage />} />
+
+          {/* Gig marketplace: worker gig management */}
+          <Route path="/worker/gigs" element={<MyGigsPage />} />
+          <Route path="/worker/gigs/create" element={<GigFormPage />} />
+          <Route path="/worker/gigs/:id/edit" element={<GigFormPage />} />
+
           <Route path="/wallet" element={<WalletPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
@@ -141,6 +157,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
             <Route path="/admin/tasks" element={<AdminTasksPage />} />
+            <Route path="/admin/gigs" element={<AdminGigsPage />} />
             <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
             <Route path="/admin/withdrawals" element={<AdminWithdrawalsPage />} />
             <Route path="/admin/disputes" element={<AdminDisputesPage />} />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, Link } from 'react-router-dom';
 import {
   LayoutDashboard, Users, ClipboardList, Receipt, Banknote, ShieldAlert, Flag, Settings, ScrollText, LogOut,
-  Menu, X,
+  Menu, X, Layers,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Logo from '../../assets/logo.png'
@@ -11,6 +11,7 @@ const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/users', label: 'Users', icon: Users },
   { to: '/admin/tasks', label: 'Tasks', icon: ClipboardList },
+  { to: '/admin/gigs', label: 'Gigs', icon: Layers },
   { to: '/admin/transactions', label: 'Transactions', icon: Receipt },
   { to: '/admin/withdrawals', label: 'Withdrawals', icon: Banknote },
   { to: '/admin/disputes', label: 'Disputes', icon: ShieldAlert },

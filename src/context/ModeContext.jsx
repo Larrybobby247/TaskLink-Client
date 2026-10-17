@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { useAuth } from './AuthContext.jsx';
 import { usersApi } from '../api/users.js';
 
@@ -8,26 +8,37 @@ const ModeContext = createContext(null);
  * Interface-only preference (client vs worker). This NEVER controls backend
  * authorization by itself - the server always checks actual relationships
  * (task ownership, order participation) regardless of currentMode.
+ *
+ * FIX: mode is now DERIVED from the signed-in user instead of being copied
+ * into separate state. Before, the first render always used 'client' and
+ * only switched after an effect ran, so the homepage fetched the wrong
+ * mode's data first and could flash the wrong section. It also swallowed
+ * save failures, so a failed /users/mode call made the mode "snap back"
+ * after a reload with no explanation. Now a failed save reverts the UI.
  */
 export function ModeProvider({ children }) {
   const { user, updateLocalUser } = useAuth();
-  const [mode, setModeState] = useState('client');
+  const mode = user?.currentMode === 'worker' ? 'worker' : 'client';
 
-  useEffect(() => {
-    if (user?.currentMode) setModeState(user.currentMode);
-  }, [user?.currentMode]);
+  const setMode = useCallback(
+    async (newMode) => {
+      if (newMode !== 'client' && newMode !== 'worker') return;
+      if (newMode === mode) return;
 
-  const setMode = async (newMode) => {
-    setModeState(newMode);
-    updateLocalUser({ currentMode: newMode });
-    try {
-      await usersApi.switchMode(newMode);
-    } catch {
-      // Non-fatal: the UI already reflects the switch optimistically.
-    }
-  };
+      const previous = mode;
+      updateLocalUser({ currentMode: newMode }); // optimistic
+      try {
+        await usersApi.switchMode(newMode);
+      } catch {
+        updateLocalUser({ currentMode: previous }); // keep UI in sync with the server
+      }
+    },
+    [mode, updateLocalUser]
+  );
 
-  return <ModeContext.Provider value={{ mode, setMode }}>{children}</ModeContext.Provider>;
+  const value = useMemo(() => ({ mode, setMode }), [mode, setMode]);
+
+  return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;
 }
 
 export function useMode() {

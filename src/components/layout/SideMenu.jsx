@@ -15,10 +15,13 @@ import {
   User, 
   LogOut,
   Crown,
+  Search,
+  Layers,
 } from 'lucide-react';
 
 import { messagesApi, notificationsApi } from '../../api/users.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useMode } from '../../context/ModeContext.jsx';
 import ConfirmModal from '../ui/ConfirmModal.jsx';
 
 const getId = (value) => String(value?._id || value?.id || value || '');
@@ -65,6 +68,7 @@ const getResponseItems = (response, key) => {
 
 export default function SideMenu({ open, onClose }) {
   const { user, logout } = useAuth();
+  const { mode } = useMode();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [confirmingLogout, setConfirmingLogout] = useState(false);
@@ -114,16 +118,30 @@ export default function SideMenu({ open, onClose }) {
 
   const countLabel = (count) => (count > 99 ? '99+' : count);
 
-  const items = [
-    { to: '/', label: 'Home', icon: Home },
-    { to: '/client/tasks', label: 'My Tasks', icon: ClipboardList },
-    { to: '/worker/jobs', label: 'My Jobs', icon: Briefcase },
-    { to: '/wallet', label: 'Wallet', icon: Wallet },
-    { to: '/messages', label: 'Messages', icon: MessageCircle, count: unreadMessages },
-    { to: '/notifications', label: 'Notifications', icon: Bell, count: unreadNotifications },
-    
-    { to: '/profile', label: 'Reviews', icon: Star },
-  ];
+  // Mode-aware navigation. Previously My Tasks, My Jobs and "Reviews" were
+  // shown for both modes, and "Reviews" actually linked to /profile.
+  const items = mode === 'worker'
+    ? [
+        { to: '/', label: 'Home', icon: Home },
+        { to: '/tasks', label: 'Find Tasks', icon: Search },
+        { to: '/worker/gigs', label: 'My Gigs', icon: Layers },
+        { to: '/worker/jobs', label: 'My Jobs', icon: Briefcase },
+        { to: '/wallet', label: 'Wallet', icon: Wallet },
+        { to: '/messages', label: 'Messages', icon: MessageCircle, count: unreadMessages },
+        { to: '/notifications', label: 'Notifications', icon: Bell, count: unreadNotifications },
+        { to: `/reviews/${user?._id}`, label: 'Reviews', icon: Star },
+      ]
+    : [
+        { to: '/', label: 'Home', icon: Home },
+        { to: '/search?type=workers', label: 'Find Workers', icon: Search },
+        { to: '/client/tasks', label: 'My Tasks', icon: ClipboardList },
+        { to: '/client/orders', label: 'Active Jobs', icon: Briefcase },
+        { to: '/saved-workers', label: 'Saved Workers', icon: Bookmark },
+        { to: '/wallet', label: 'Wallet', icon: Wallet },
+        { to: '/messages', label: 'Messages', icon: MessageCircle, count: unreadMessages },
+        { to: '/notifications', label: 'Notifications', icon: Bell, count: unreadNotifications },
+        { to: `/reviews/${user?._id}`, label: 'Reviews', icon: Star },
+      ];
 
   return (
     <div className="fixed inset-0 z-[100]">
@@ -132,7 +150,7 @@ export default function SideMenu({ open, onClose }) {
       <aside className="absolute top-0 right-0 h-[100dvh] w-[320px] max-w-[90vw] bg-white shadow-2xl flex flex-col overflow-hidden pb-20">
         <div className="shrink-0 px-5 pt-5 pb-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <Link to= "/settings" onclick={onClose} className="flex items-center gap-3 min-w-0">
+            <Link to="/settings" onClick={onClose} className="flex items-center gap-3 min-w-0">
               {user?.profileImage?.url ? (
                 <img src={user.profileImage.url} className="w-11 h-11 rounded-full object-cover shrink-0" alt="" />
               ) : (
