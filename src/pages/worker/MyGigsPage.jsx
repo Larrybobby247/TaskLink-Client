@@ -105,7 +105,10 @@ export default function MyGigsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-brand-navy truncate">{gig.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5 mb-1">{formatNaira(gig.startingPriceKobo)} · {gig.deliveryDays}d delivery</p>
+                <p className="text-xs text-gray-400 mt-0.5">{formatNaira(gig.startingPriceKobo)} · {gig.deliveryDays}d delivery</p>
+                {gig.stats && (
+                  <p className="text-[11px] text-gray-400 mb-1">{gig.stats.views} views · {gig.stats.orders} orders · {gig.stats.completed} completed</p>
+                )}
                 <StatusBadge status={gig.status} />
               </div>
               <div className="flex flex-col gap-1.5 items-end shrink-0">

@@ -118,7 +118,8 @@ export default function GigFormPage() {
     if (!form.category) return 'Choose a category for your gig.';
     if (form.description.trim().length < 20) return 'Describe your service in at least 20 characters.';
     if (!(Number(form.price) > 0)) return 'Enter a price greater than ₦0.';
-    if (!(Number(form.deliveryDays) >= 1)) return 'Enter a delivery time of at least 1 day.';
+    if (!Number.isInteger(Number(form.deliveryDays)) || Number(form.deliveryDays) < 1) return 'Delivery time must be a whole number of days (at least 1).';
+    if (!Number.isInteger(Number(form.revisions)) || Number(form.revisions) < 0) return 'Revisions must be a whole number (0 or more).';
     if (form.portfolioUrl.trim() && !isHttpUrl(form.portfolioUrl.trim())) return 'Portfolio link must start with http:// or https://';
     if (usePackages && !packages.some((p) => p.name && p.priceKobo > 0)) {
       return 'Set a price for at least one package, or turn packages off.';
@@ -163,6 +164,10 @@ export default function GigFormPage() {
     setError('');
     const problem = validate();
     if (problem) return fail(problem);
+    // The server requires a cover image to publish (the first image becomes the cover).
+    if (!isPublished && images.length === 0) {
+      return fail('Add at least one image before publishing. Your first image becomes the cover.');
+    }
     setSaving(true);
     try {
       const gigId = await persist();
