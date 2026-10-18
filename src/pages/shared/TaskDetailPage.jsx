@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Users } from 'lucide-react';
+import { MapPin, Clock, Users, Pencil, Trash2 } from 'lucide-react';
 import { tasksApi, applicationsApi } from '../../api/tasks.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
 import ErrorState from '../../components/ui/ErrorState.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
+import ConfirmModal from '../../components/ui/ConfirmModal.jsx';
 import { formatNaira } from '../../utils/money.js';
 import { timeUntil } from '../../utils/time.js';
 
@@ -21,6 +22,7 @@ export default function TaskDetailPage() {
   const [applySuccess, setApplySuccess] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [applyError, setApplyError] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -77,6 +79,10 @@ export default function TaskDetailPage() {
   if (!task) return <div className="flex justify-center py-16"><Spinner size={32} /></div>;
 
   const isOwner = user && String(task.client._id || task.client) === String(user._id);
+  // Gig orders / direct hires are managed from their order, not edited here.
+  const isTaskPost = !task.source || task.source === 'TASK_POST';
+  const canEdit = isOwner && isTaskPost && ['DRAFT', 'PAUSED', 'PUBLISHED', 'APPLICATIONS_OPEN'].includes(task.status);
+  const canDelete = isOwner && isTaskPost && ['DRAFT', 'PAUSED', 'PUBLISHED', 'APPLICATIONS_OPEN', 'EXPIRED', 'CANCELLED'].includes(task.status);
 
   const submitApplication = async (e) => {
     e.preventDefault();
@@ -146,9 +152,28 @@ export default function TaskDetailPage() {
       </div>
 
       {isOwner ? (
-        <button onClick={() => navigate(`/client/tasks/${task._id}/applications`)} className="btn-primary w-full">
-          Manage Task ({task.applicationCount || 0} applications)
-        </button>
+        <div className="space-y-3">
+          <button onClick={() => navigate(`/client/tasks/${task._id}/applications`)} className="btn-primary w-full">
+            Manage Task ({task.applicationCount || 0} applications)
+          </button>
+          {(canEdit || canDelete) && (
+            <div className="flex gap-3">
+              {canEdit && (
+                <button onClick={() => navigate(`/tasks/${task._id}/edit`)} className="btn-secondary flex-1 flex items-center justify-center gap-1.5">
+                  <Pencil size={15} /> Edit task
+                </button>
+              )}
+              {canDelete && (
+                <button onClick={() => setDeleteOpen(true)} className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-red-200 text-red-500 font-semibold py-3 hover:bg-red-50">
+                  <Trash2 size={15} /> Delete
+                </button>
+              )}
+            </div>
+          )}
+          {!canEdit && isTaskPost && ['WORKER_SELECTED', 'IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED'].includes(task.status) && (
+            <p className="text-xs text-gray-400 text-center">A worker has been selected, so this task can no longer be edited.</p>
+          )}
+        </div>
       ) : hasApplied || applySuccess ? (
         <div className="card p-5 text-center bg-green-50 border-green-100">
           <p className="font-semibold text-green-700">Application sent!</p>
@@ -179,6 +204,22 @@ export default function TaskDetailPage() {
             {applying ? 'Applying...' : 'Apply for Task'}
           </button>
         </form>
+      )}
+
+      {deleteOpen && (
+        <ConfirmModal
+          title="Delete this task?"
+          description={(task.applicationCount || 0) > 0
+            ? `${task.applicationCount} worker${task.applicationCount === 1 ? ' has' : 's have'} applied. The task will be closed and they will be notified. This can't be undone.`
+            : "This will permanently remove the task. This can't be undone."}
+          confirmLabel="Delete task"
+          danger
+          onConfirm={async () => {
+            await tasksApi.remove(task._id);
+            navigate('/client/tasks');
+          }}
+          onClose={() => setDeleteOpen(false)}
+        />
       )}
     </div>
   );

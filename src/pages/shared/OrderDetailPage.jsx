@@ -6,8 +6,10 @@ import { messagesApi } from '../../api/users.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/ui/Spinner.jsx';
 import StatusBadge from '../../components/ui/StatusBadge.jsx';
+import ConfirmModal from '../../components/ui/ConfirmModal.jsx';
 import { formatNaira } from '../../utils/money.js';
 import { Star, MessageCircle } from 'lucide-react';
+import { PlanSummary, WorkerPlanForm, ClientPlanReview, PaymentPanel, MilestoneProgress } from '../../components/order/OrderPlan.jsx';
 
 const getUserId = (value) => {
   if (!value) return null;
@@ -48,6 +50,7 @@ export default function OrderDetailPage() {
   const [reviewBusy, setReviewBusy] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewError, setReviewError] = useState('');
+  const [declineOpen, setDeclineOpen] = useState(false);
 
   const load = async () => {
     const { data } = await ordersApi.get(id);
@@ -86,6 +89,14 @@ export default function OrderDetailPage() {
   const isClient = currentUserId === clientId;
   const isWorker = currentUserId === workerId;
   const latestRevisionMessage = getLatestRevisionMessage(order);
+
+  // Milestone-based orders: which milestone is being worked on / reviewed right now.
+  const milestones = order.plan?.useMilestones ? order.plan.milestones || [] : [];
+  const hasMilestones = milestones.length > 0;
+  const workingMilestone = milestones.find((m) => ['FUNDED', 'REVISION_REQUESTED'].includes(m.status));
+  const reviewMilestone = milestones.find((m) => m.status === 'SUBMITTED');
+  const hasUnpaidMilestone = milestones.some((m) => m.status === 'PENDING_PAYMENT');
+  const planReady = Boolean(order.plan?.acceptedAt);
 
   const openOrCreateConversation = async () => {
     if (!order || !user) return;
@@ -200,7 +211,7 @@ export default function OrderDetailPage() {
         <p className="text-2xl font-bold text-green-600 mt-3">{formatNaira(order.agreedAmountKobo)}</p>
         <p className="text-xs text-gray-400">Platform fee: {formatNaira(order.platformFeeKobo)} · Worker gets {formatNaira(order.workerNetAmountKobo)}</p>
 
-        {(isClient || isWorker) && ['PAYMENT_SECURED', 'IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED', 'COMPLETED'].includes(order.status) && (
+        {(isClient || isWorker) && ['AWAITING_PLAN', 'PLAN_REVIEW', 'AWAITING_PAYMENT', 'PAYMENT_SECURED', 'IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED', 'COMPLETED'].includes(order.status) && (
           <div className="mt-4">
             <button type="button" onClick={openOrCreateConversation} disabled={chatBusy} className="btn-secondary w-full flex items-center justify-center gap-2">
               <MessageCircle size={18} />
@@ -211,12 +222,71 @@ export default function OrderDetailPage() {
         )}
       </div>
 
-      {isClient && order.status === 'AWAITING_PAYMENT' && (
-        <div className="card p-5">
-          <p className="text-sm text-gray-600 mb-3">Payment is required before the worker can start.</p>
-          <button onClick={pay} disabled={busy} className="btn-primary w-full">{busy ? 'Redirecting...' : `Pay ${formatNaira(order.agreedAmountKobo)}`}</button>
-        </div>
+      {/* ---- Step 1: worker sends requirements + work plan ---- */}
+      {order.status === 'AWAITING_PLAN' && isClient && (
+        <>
+          <div className="card p-5 text-center space-y-2">
+            <p className="font-semibold text-brand-navy">Waiting for {order.worker?.fullName?.split(' ')[0] || 'your worker'}'s work plan</p>
+            <p className="text-sm text-gray-500">
+              {order.plan?.changeRequestCount > 0
+                ? 'You asked for changes. They will send an updated plan for you to review.'
+                : "They'll list what they need from you and how they'll do the job. You'll review it before paying anything."}
+            </p>
+            <button type="button" onClick={() => setDeclineOpen(true)} className="text-sm font-medium text-red-500 pt-1">Choose a different worker</button>
+          </div>
+          {declineOpen && (
+            <ConfirmModal
+              title="Choose a different worker?"
+              description="This worker will be told you went another way and your task will reopen so you can pick someone else. You haven't paid anything yet."
+              confirmLabel="Choose another worker"
+              danger
+              onConfirm={async () => {
+                await ordersApi.declineWorker(order._id);
+                navigate(`/client/tasks/${order.task?._id || order.task}/applications`);
+              }}
+              onClose={() => setDeclineOpen(false)}
+            />
+          )}
+        </>
       )}
+      {order.status === 'AWAITING_PLAN' && isWorker && <WorkerPlanForm order={order} onDone={load} />}
+
+      {/* ---- Step 2: client reviews the plan ---- */}
+      {order.status === 'PLAN_REVIEW' && isClient && (
+        <ClientPlanReview
+          order={order}
+          onDone={load}
+          onWorkerDeclined={() => navigate(`/client/tasks/${order.task?._id || order.task}/applications`)}
+        />
+      )}
+      {order.status === 'PLAN_REVIEW' && isWorker && (
+        <>
+          <PlanSummary plan={order.plan} title="Your work plan" />
+          <div className="card p-5 text-center bg-gray-50">
+            <p className="font-semibold text-brand-navy">Waiting for the client to review your plan</p>
+            <p className="text-sm text-gray-500 mt-1">You'll be notified when they approve it or ask for changes.</p>
+          </div>
+        </>
+      )}
+
+      {/* ---- Step 3: payment (single payment or milestone by milestone) ---- */}
+      {isClient && planReady && hasUnpaidMilestone && ['AWAITING_PAYMENT', 'IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED'].includes(order.status) && <PaymentPanel order={order} />}
+      {isClient && order.status === 'AWAITING_PAYMENT' && !hasMilestones && <PaymentPanel order={order} />}
+      {isWorker && order.status === 'AWAITING_PAYMENT' && (
+        <>
+          <PlanSummary plan={order.plan} title="Your approved work plan" hideMilestones={hasMilestones} />
+          <div className="card p-5 text-center bg-gray-50">
+            <p className="font-semibold text-brand-navy">{hasMilestones && milestones.some((m) => m.status === 'APPROVED') ? 'Waiting for the client to fund the next milestone' : 'Waiting for the client to pay'}</p>
+            <p className="text-sm text-gray-500 mt-1">You can start as soon as the payment is secured.</p>
+          </div>
+        </>
+      )}
+
+      {/* ---- Agreed plan stays visible during and after the job ---- */}
+      {['IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED', 'COMPLETED'].includes(order.status) && order.plan?.structure && (
+        <PlanSummary plan={order.plan} title="Agreed work plan" hideMilestones />
+      )}
+      {(hasMilestones && !(isClient && order.status === 'AWAITING_PAYMENT') && order.status !== 'AWAITING_PLAN' && order.status !== 'PLAN_REVIEW') && !(isClient && hasUnpaidMilestone && ['AWAITING_PAYMENT', 'IN_PROGRESS', 'SUBMITTED', 'REVISION_REQUESTED'].includes(order.status)) && <MilestoneProgress order={order} />}
 
       {isWorker && order.status === 'REVISION_REQUESTED' && latestRevisionMessage && (
         <div className="card p-5 border-yellow-200 bg-yellow-50">
@@ -227,7 +297,7 @@ export default function OrderDetailPage() {
 
       {isWorker && ['IN_PROGRESS', 'REVISION_REQUESTED'].includes(order.status) && (
         <div className="card p-5 space-y-3">
-          <h3 className="font-semibold text-brand-navy">Submit your work</h3>
+          <h3 className="font-semibold text-brand-navy">{workingMilestone ? `Submit work for "${workingMilestone.title}"` : 'Submit your work'}</h3>
           <textarea className="input-field min-h-[100px]" placeholder="Describe what you're submitting..." value={message} onChange={(e) => setMessage(e.target.value)} />
           <button onClick={submitWork} disabled={busy || !message.trim()} className="btn-primary w-full">{busy ? 'Submitting...' : 'Submit Work'}</button>
         </div>
@@ -235,9 +305,9 @@ export default function OrderDetailPage() {
 
       {isClient && order.status === 'SUBMITTED' && (
         <div className="card p-5 space-y-3">
-          <h3 className="font-semibold text-brand-navy">Review submission</h3>
+          <h3 className="font-semibold text-brand-navy">{reviewMilestone ? `Review "${reviewMilestone.title}"` : 'Review submission'}</h3>
           {order.submissions?.length > 0 && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">{order.submissions[order.submissions.length - 1].message}</p>}
-          <button onClick={approve} disabled={busy} className="btn-primary w-full">Approve</button>
+          <button onClick={approve} disabled={busy} className="btn-primary w-full">{reviewMilestone ? `Approve & release ${formatNaira(reviewMilestone.amountKobo)}` : 'Approve'}</button>
           <textarea className="input-field min-h-[80px]" placeholder="Explain what needs to change..." value={revisionMessage} onChange={(e) => setRevisionMessage(e.target.value)} />
           <button onClick={requestRevision} disabled={busy || !revisionMessage.trim()} className="btn-secondary w-full">Request Revision</button>
         </div>

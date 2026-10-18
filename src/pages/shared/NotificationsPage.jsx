@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../../api/users.js';
 import EmptyState from '../../components/ui/EmptyState.jsx';
 import TaskListSkeleton from '../../components/task/TaskListSkeleton.jsx';
@@ -7,6 +8,7 @@ import { timeAgo } from '../../utils/time.js';
 export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
+  const navigate = useNavigate();
 
   const load = () => notificationsApi.list().then((res) => setItems(res.data)).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -21,6 +23,16 @@ export default function NotificationsPage() {
     setItems((its) => its.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
   };
 
+  // Open whatever the notification is about. Orders open for either side
+  // (the order page works out whether you are the client or the worker).
+  const open = async (n) => {
+    try { await markOne(n._id); } catch { /* still navigate */ }
+    const { entityType, entityId } = n.link || {};
+    if (!entityId) return;
+    if (entityType === 'ORDER') navigate(`/client/orders/${entityId}`);
+    else if (entityType === 'TASK') navigate(`/tasks/${entityId}`);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -33,7 +45,7 @@ export default function NotificationsPage() {
       ) : items.length ? (
         <div className="space-y-2">
           {items.map((n) => (
-            <button key={n._id} onClick={() => markOne(n._id)} className={`card p-4 w-full text-left flex items-start gap-3 ${n.isRead ? 'opacity-60' : ''}`}>
+            <button key={n._id} onClick={() => open(n)} className={`card p-4 w-full text-left flex items-start gap-3 ${n.isRead ? 'opacity-60' : ''}`}>
               {!n.isRead && <span className="w-2 h-2 rounded-full bg-brand-blue mt-1.5 shrink-0" />}
               <div>
                 <p className="font-medium text-sm">{n.title}</p>
