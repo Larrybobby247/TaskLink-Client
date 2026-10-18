@@ -5,6 +5,10 @@ export const ordersApi = {
   get: (id) => api.get(`/orders/${id}`).then((r) => r.data),
   client: (params) => api.get('/orders/client', { params }).then((r) => r.data),
   worker: (params) => api.get('/orders/worker', { params }).then((r) => r.data),
+  // Work plan (task-post flow)
+  submitPlan: (id, payload) => api.post(`/orders/${id}/plan`, payload).then((r) => r.data),
+  respondToPlan: (id, payload) => api.post(`/orders/${id}/plan/respond`, payload).then((r) => r.data),
+  declineWorker: (id, reason) => api.post(`/orders/${id}/decline-worker`, { reason }).then((r) => r.data),
   submit: (id, payload) => api.post(`/orders/${id}/submit`, payload).then((r) => r.data),
   revision: (id, payload) => api.post(`/orders/${id}/revision`, payload).then((r) => r.data),
   approve: (id) => api.post(`/orders/${id}/approve`).then((r) => r.data),
