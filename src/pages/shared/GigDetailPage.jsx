@@ -205,10 +205,31 @@ export default function GigDetailPage() {
                 >
                   <p className="text-[11px] font-bold text-brand-navy">{pkg.name}</p>
                   <p className="text-sm font-semibold mt-1">{formatNaira(pkg.priceKobo)}</p>
-                  <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-1"><Clock size={10} /> {pkg.deliveryDays}d</p>
-                  {typeof pkg.revisions === 'number' && <p className="text-[11px] text-gray-400 mt-0.5">{pkg.revisions} rev.</p>}
+                  <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-1"><Clock size={10} /> {pkg.deliveryDays} day{pkg.deliveryDays === 1 ? '' : 's'}</p>
+                  {typeof pkg.revisions === 'number' && <p className="text-[11px] text-gray-400 mt-0.5">{pkg.revisions} revision{pkg.revisions === 1 ? '' : 's'}</p>}
                 </button>
               ))}
+            </div>
+          )}
+
+          {chosenPackage && (chosenPackage.deliverables?.length > 0 || chosenPackage.excluded?.length > 0) && (
+            <div className="rounded-xl bg-gray-50 p-3 space-y-3">
+              {chosenPackage.deliverables?.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-brand-navy mb-1.5">Included in {chosenPackage.name}</h4>
+                  <ul className="space-y-1">
+                    {chosenPackage.deliverables.map((item) => <li key={item} className="text-sm text-gray-600 flex items-start gap-1.5"><CheckCircle2 size={14} className="text-green-500 shrink-0 mt-0.5" />{item}</li>)}
+                  </ul>
+                </div>
+              )}
+              {chosenPackage.excluded?.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-semibold text-brand-navy mb-1.5">Not included in {chosenPackage.name}</h4>
+                  <ul className="space-y-1">
+                    {chosenPackage.excluded.map((item) => <li key={item} className="text-sm text-gray-400 flex items-start gap-1.5"><XCircle size={14} className="text-gray-300 shrink-0 mt-0.5" />{item}</li>)}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
