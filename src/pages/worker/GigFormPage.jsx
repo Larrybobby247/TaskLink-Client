@@ -20,6 +20,15 @@ const EMPTY_FORM = {
   included: '', excluded: '', requirementsFromClient: '', portfolioUrl: '',
 };
 
+const splitLines = (text) => (text || '').split('\n').map((s) => s.trim()).filter(Boolean);
+// Packages keep their include/exclude lists as raw text while editing so that
+// pressing Enter in the textarea works; they're split into arrays on save.
+const packageToForm = (p) => ({
+  ...p,
+  deliverablesText: (p.deliverables || []).join('\n'),
+  excludedText: (p.excluded || []).join('\n'),
+});
+
 const errMsg = (err) => err?.errors?.[0]?.message || err?.message || 'Something went wrong. Please try again.';
 const isHttpUrl = (value) => { try { return ['http:', 'https:'].includes(new URL(value).protocol); } catch { return false; } };
 
@@ -82,7 +91,7 @@ export default function GigFormPage() {
         setImages(g.images || []);
         setCoverPublicId(g.coverImage?.publicId || null);
         setUsePackages((g.packages || []).length > 0);
-        setPackages(g.packages || []);
+        setPackages((g.packages || []).map(packageToForm));
         setStatus(g.status || 'DRAFT');
       })
       .catch((err) => { if (!cancelled) setLoadError(errMsg(err)); })
@@ -109,7 +118,15 @@ export default function GigFormPage() {
     excluded: form.excluded.split('\n').map((s) => s.trim()).filter(Boolean),
     requirementsFromClient: form.requirementsFromClient.trim() || undefined,
     portfolioUrl: form.portfolioUrl.trim() || undefined,
-    packages: usePackages ? packages.filter((p) => p.name && p.priceKobo) : [],
+    packages: usePackages
+      ? packages
+          .filter((p) => p.name && p.priceKobo > 0)
+          .map(({ deliverablesText, excludedText, ...p }) => ({
+            ...p,
+            deliverables: splitLines(deliverablesText),
+            excluded: splitLines(excludedText),
+          }))
+      : [],
   });
 
   // Returns an error message, or '' when the form is OK.
@@ -312,7 +329,7 @@ export default function GigFormPage() {
             onChange={(e) => {
               setUsePackages(e.target.checked);
               if (e.target.checked && packages.length === 0) {
-                setPackages(PACKAGE_NAMES.map((name) => ({ name, priceKobo: 0, deliveryDays: 1, revisions: 1, deliverables: [] })));
+                setPackages(PACKAGE_NAMES.map((name) => ({ name, priceKobo: 0, deliveryDays: 1, revisions: 1, deliverablesText: '', excludedText: '' })));
               }
             }}
             className="h-4 w-4"
@@ -325,13 +342,33 @@ export default function GigFormPage() {
               <div key={pkg.name} className="border border-gray-100 rounded-xl p-3 space-y-2">
                 <p className="text-xs font-bold text-brand-navy">{pkg.name}</p>
                 <div className="grid grid-cols-3 gap-2">
-                  <input className="input-field text-xs" type="number" min="0" aria-label={`${pkg.name} price in naira`} placeholder="Price (₦)" value={pkg.priceKobo ? pkg.priceKobo / 100 : ''} onChange={(e) => updatePackage(i, { priceKobo: nairaToKobo(e.target.value || 0) })} />
-                  <input className="input-field text-xs" type="number" min="1" aria-label={`${pkg.name} delivery days`} placeholder="Days" value={pkg.deliveryDays} onChange={(e) => updatePackage(i, { deliveryDays: Number(e.target.value) || 1 })} />
-                  <input className="input-field text-xs" type="number" min="0" aria-label={`${pkg.name} revisions`} placeholder="Revisions" value={pkg.revisions} onChange={(e) => updatePackage(i, { revisions: Number(e.target.value) || 0 })} />
+                  <div>
+                    <label htmlFor={`pkg-${i}-price`} className="block text-[11px] font-medium text-gray-500 mb-1">Price (₦)</label>
+                    <input id={`pkg-${i}-price`} className="input-field text-xs" type="number" min="0" inputMode="numeric" placeholder="e.g. 5000" value={pkg.priceKobo ? pkg.priceKobo / 100 : ''} onChange={(e) => updatePackage(i, { priceKobo: nairaToKobo(e.target.value || 0) })} />
+                  </div>
+                  <div>
+                    <label htmlFor={`pkg-${i}-days`} className="block text-[11px] font-medium text-gray-500 mb-1">Delivery time (days)</label>
+                    <input id={`pkg-${i}-days`} className="input-field text-xs" type="number" min="1" inputMode="numeric" placeholder="e.g. 3" value={pkg.deliveryDays} onChange={(e) => updatePackage(i, { deliveryDays: Number(e.target.value) || 1 })} />
+                  </div>
+                  <div>
+                    <label htmlFor={`pkg-${i}-rev`} className="block text-[11px] font-medium text-gray-500 mb-1">Free revisions</label>
+                    <input id={`pkg-${i}-rev`} className="input-field text-xs" type="number" min="0" inputMode="numeric" placeholder="e.g. 2" value={pkg.revisions} onChange={(e) => updatePackage(i, { revisions: Number(e.target.value) || 0 })} />
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Delivery time = days you need to deliver the first version. Free revisions = how many times the client can ask you to change the work at no extra cost.
+                </p>
+                <div>
+                  <label htmlFor={`pkg-${i}-inc`} className="block text-[11px] font-medium text-gray-500 mb-1">What's included in {pkg.name} (one per line)</label>
+                  <textarea id={`pkg-${i}-inc`} className="input-field text-xs min-h-[70px]" placeholder={'e.g. 1 logo concept\nSource file'} value={pkg.deliverablesText || ''} onChange={(e) => updatePackage(i, { deliverablesText: e.target.value })} />
+                </div>
+                <div>
+                  <label htmlFor={`pkg-${i}-exc`} className="block text-[11px] font-medium text-gray-500 mb-1">What's NOT included in {pkg.name} (one per line)</label>
+                  <textarea id={`pkg-${i}-exc`} className="input-field text-xs min-h-[70px]" placeholder={'e.g. Commercial license\nPrinting'} value={pkg.excludedText || ''} onChange={(e) => updatePackage(i, { excludedText: e.target.value })} />
                 </div>
               </div>
             ))}
-            <p className="text-xs text-gray-400">The "starting price" shown on your gig card comes from the base price/delivery fields below.</p>
+            <p className="text-xs text-gray-400">The "starting price" shown on your gig card comes from the base price/delivery fields below. The general "What's included / excluded" lists further down apply to every package.</p>
           </div>
         )}
 
@@ -341,13 +378,15 @@ export default function GigFormPage() {
             <input id="gig-price" className="input-field mt-2" type="number" min="0" inputMode="numeric" value={form.price} onChange={(e) => set('price', e.target.value)} />
           </div>
           <div>
-            <label htmlFor="gig-days" className="text-sm font-medium text-brand-navy">Delivery (days)</label>
+            <label htmlFor="gig-days" className="text-sm font-medium text-brand-navy">Delivery time (days)</label>
             <input id="gig-days" className="input-field mt-2" type="number" min="1" inputMode="numeric" value={form.deliveryDays} onChange={(e) => set('deliveryDays', e.target.value)} />
+            <p className="text-xs text-gray-400 mt-1">Days you need to deliver the work.</p>
           </div>
         </div>
         <div>
-          <label htmlFor="gig-revisions" className="text-sm font-medium text-brand-navy">Revisions included</label>
+          <label htmlFor="gig-revisions" className="text-sm font-medium text-brand-navy">Free revisions included</label>
           <input id="gig-revisions" className="input-field mt-2" type="number" min="0" inputMode="numeric" value={form.revisions} onChange={(e) => set('revisions', e.target.value)} />
+          <p className="text-xs text-gray-400 mt-1">How many times the client can ask you to change the work at no extra cost.</p>
         </div>
       </div>
 
