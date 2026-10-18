@@ -96,6 +96,7 @@ export default function App() {
           <Route path="/tasks" element={<TaskListPage />} />
           <Route path="/tasks/saved" element={<TaskListPage />} />
           <Route path="/tasks/create" element={<PostTaskPage />} />
+          <Route path="/tasks/:id/edit" element={<PostTaskPage />} />
           <Route path="/tasks/:id" element={<TaskDetailPage />} />
 
           <Route path="/client/tasks" element={<MyTasksPage />} />
